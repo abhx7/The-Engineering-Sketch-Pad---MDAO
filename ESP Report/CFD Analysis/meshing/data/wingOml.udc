@@ -1,0 +1,102 @@
+# .udc to make the wingOml
+# written by John Dannenhoffer
+
+INTERFACE . ALL
+
+# set a mark so that we can restore the stack back to
+#    where it was when we started
+MARK
+
+# check to see if the Body already exits
+RESTORE   wingOml
+
+# if it does not exist, make it now
+CATBEG    $name_not_found
+   MESSAGE Building_wingOml
+
+   # lay out left wing
+   MARK
+      # root
+      UDPRIM    naca      thickness  wing:thickr   camber  wing:camberr   sharpte  wing:sharpte
+      SCALE     wing:chordr
+      ROTATEX   90  0  0
+      ROTATEY   wing:alphar  0  0
+      TRANSLATE wing:xroot   wing:yroot   wing:zroot
+
+      UDPRIM    naca      thickness  wing:thickb   camber  wing:camberb   sharpte  wing:sharpte
+      SCALE     wing:chordb
+      ROTATEX   90  0  0
+      ROTATEY   wing:alphab  0  0
+      TRANSLATE wing:xbreak       wing:ybreak    wing:zbreak
+
+      # left tip
+      UDPRIM    naca      thickness  wing:thickt   camber  wing:cambert   sharpte  wing:sharpte
+      SCALE     wing:chordt
+      ROTATEX   90  0  0
+      ROTATEY   wing:alphat  0           0
+      TRANSLATE wing:xtip    wing:ytip   wing:ztip
+   RULE
+      ATTRIBUTE tagComp  $leftWing
+   SET       ruledBody @nbody
+
+   SELECT    FACE ruledBody  1
+      ATTRIBUTE tagType  $root
+   SELECT    FACE ruledBody  2
+      ATTRIBUTE tagType  $tip
+      ATTRIBUTE tagIndex $1
+   SELECT    FACE ruledBody  3
+   SELECT    ADD  ruledBody  4
+      ATTRIBUTE tagType  $upper
+   SELECT    FACE ruledBody  5
+   SELECT    ADD  ruledBody  6
+      ATTRIBUTE tagType  $lower
+   SELECT    EDGE ruledBody 3 ruledBody 5 1
+   SELECT    ADD  ruledBody 4 ruledBody 6 1
+       ATTRIBUTE tagType  $leadingEdge
+       ATTRIBUTE tagType  $leadingEdge
+   IFTHEN    wing:sharpte EQ 0
+      SELECT    FACE ruledBody 7
+      SELECT    ADD  ruledBody 8
+         ATTRIBUTE tagType  $trailingEdge
+   ELSE
+      SELECT    EDGE  ruledBody 3 ruledBody 5 2
+      SELECT    ADD   ruledBody 4 ruledBody 6 2
+         ATTRIBUTE tagType  $trailingEdge
+   ENDIF
+
+   # right wing too
+   STORE     LeftWing 0 1
+   RESTORE   LeftWing
+      ATTRIBUTE tagComp $riteWing
+   SELECT    FACE  $tagType $tip
+      ATTRIBUTE tagIndex $2
+   SELECT    EDGE  $tagType $leadingEdge
+   IFTHEN    @iedge GT 0
+      SELECT EDGE  $tagType $leadingEdge
+         ATTRIBUTE tagComp $riteWing
+   ENDIF
+   IFTHEN    wing:sharpte EQ 1
+      SELECT    EDGE  $tagType $trailingEdge
+      IFTHEN    @iedge GT 0
+         SELECT EDGE  $tagType $trailingEdge
+            ATTRIBUTE tagComp $riteWing
+      ENDIF
+   ENDIF
+   MIRROR    0   1  0
+
+   # join into single wing
+   JOIN
+
+   # attribute the root
+   SELECT    EDGE  ruledBody 3 ruledBody 3 1
+   SELECT    ADD   ruledBody 5 ruledBody 5 1
+      ATTRIBUTE tagType  $root
+
+   # store the final Body
+   STORE     wingOml
+CATEND
+
+# make sure that we did not leave any new Bodys on the stack
+STORE     ..
+
+END

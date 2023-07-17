@@ -1,0 +1,21 @@
+# .udc to calculate critial locations and dimensions for a htail
+# written by John Dannenhoffer
+
+INTERFACE . ALL
+
+OUTPMTR   htail:area
+OUTPMTR   htail:span
+
+DIMENSION htail:xspar  2  1
+
+SET       htail:xroot    wing:xroot+htail:length
+SET       htail:area     htail:vc*wing:area*wing:mac/htail:length
+SET       htail:span     sqrt(htail:area*htail:aspect)
+SET       htail:chordr   2*htail:area/htail:span/(1+htail:taper)
+SET       htail:chordt   htail:chordr*htail:taper
+SET       htail:xtip     htail:xroot+htail:span*tand(htail:sweep)
+SET       htail:ytip     -htail:span
+SET       htail:ztip     htail:zroot+htail:span*tand(htail:dihedral)
+SET       htail:sharpte  SHARP_TE
+
+END

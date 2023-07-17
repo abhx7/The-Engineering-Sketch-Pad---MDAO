@@ -1,0 +1,29 @@
+# .udc to calculate critial locations and dimensions for a fuse
+# written by John Dannenhoffer
+
+INTERFACE . ALL
+
+SET       fuse:Length     htail:xroot+htail:chordr+fuse:aftTailExt
+SET       fuse:midLength  fuse:Length-(fuse:fwdLength+fuse:aftLength)
+
+# compute size of fuselage and initial cross-section sizes
+SET       x1              fuse:noselist[1,1]
+SET       z1              fuse:noseHeight
+SET       r1              fuse:noselist[2,1]
+
+SET       x2              fuse:fwdLength/2
+SET       z2              fuse:noseHeight/2
+SET       r2              (fuse:midHeight+fuse:midWidth)/8+r1
+
+set       fuse:theta      atan2(z2-z1,x2-x1)*180/pi(1)
+
+DIMENSION fuse:xsects 6 8 0
+#                  rx (height)     ;  ry (width)     ;   n (power) ;   angle (deg);  xloc                         ;  zloc          ;  curve;  nbulk;
+SET fuse:xsects "               0.0;              0.0;   fuse:power;           0.0;                            0.0;              z1;      2;      0; \
+                                 r1;               r1;   fuse:power;    fuse:theta;                             x1;              z1;      2;      1; \
+                                 r2;               r2;   fuse:power;    fuse:theta;                             x2;              z2;      2;      1; \
+                   fuse:midHeight/2;  fuse:midWidth/2;   fuse:power;           0.0;                 fuse:fwdLength;             0.0;      1;     20; \
+                   fuse:midHeight/2;  fuse:midWidth/2;   fuse:power;           0.0;  fuse:fwdLength+fuse:midLength;             0.0;      0;      8; \
+                   fuse:aftHeight/2;  fuse:aftWidth/2;   fuse:power;           0.0;                    fuse:Length;  fuse:aftCenter;      2;      0; "
+
+END

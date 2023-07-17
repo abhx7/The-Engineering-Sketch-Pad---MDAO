@@ -1,0 +1,168 @@
+# .udc to make the SimplySupport view
+# written by John Dannenhoffer
+
+INTERFACE . ALL
+
+# make the BEM first
+UDPRIM    $/viewBem
+
+# remove the Faces adjacent to the trailingEdge and those
+#    addociated with spar3
+UDPRIM    editAttr  filename <<
+   FACE    HAS      *=*
+   SET              keepFace=true
+
+   FACE    ADJ2EDGE tagType=trailingEdge
+   SET              keepFace=false
+
+   FACE    ADJ2FACE tagType=spar      tagIndex=2
+   AND     ADJ2FACE tagType=spar      tagIndex=3
+   ANDNOT  HAS      tagType=spar
+   SET              keepFace=false
+
+   FACE    ADJ2FACE tagType=fusespar  tagIndex=2
+   AND     ADJ2FACE tagType=fusespar  tagIndex=3
+   SET              keepFace=false
+
+   FACE    HAS      tagType=spar      tagIndex=3
+   SET              keepFace=false
+
+   FACE    HAS      tagType=fusespar  tagIndex=3
+   SET              keepFace=false
+>>
+
+SELECT    FACE   $keepFace  $true
+EXTRACT   @sellist
+
+UDPRIM    editAttr  filename <<
+   FACE   HAS      keepFace=true
+   SET             keepFace=
+>>
+
+SELECT    BODY
+   ATTRIBUTE capsAIM        $nastranAIM;astrosAIM;mystranAIM;tacsAIM;egadsTessAIM
+   ATTRIBUTE capsLength     $ft
+   ATTRIBUTE capsMeshLength wing:mac
+   ATTRIBUTE capsDiscipline $Structure
+
+# attributes based upon tags
+UDPRIM    editAttr   filename <<
+   FACE    HAS  tagType=spar           tagIndex=1
+   SET          capsGroup=wingSpar1    capsMesh=wingSpar1
+
+   FACE    HAS  tagType=spar           tagIndex=2
+   SET          capsGroup=wingSpar2    capsMesh=wingSpar2
+
+   FACE    HAS  tagType=spar           tagIndex=3
+   SET          capsGroup=wingSpar3    capsMesh=wingSpar3
+
+   FACE    HAS  tagComp=leftWing       tagType=upper
+   SET          capsGroup=leftWingSkin capsBound=upperWing
+
+   FACE    HAS  tagComp=riteWing       tagType=upper
+   SET          capsGroup=riteWingSkin capsBound=upperWing
+
+   FACE    HAS  tagComp=leftWing       tagType=lower
+   SET          capsGroup=leftWingSkin capsBound=lowerWing
+
+   FACE    HAS  tagComp=riteWing       tagType=lower
+   SET          capsGroup=riteWingSkin capsBound=lowerWing
+
+   FACE    HAS  tagType=rib
+   SET          capsGroup=wingRib
+
+   FACE    HAS  tagComp=leftWing       tagType=tip
+   SET          capsGroup=wingRib      capsBound=leftTip
+
+   FACE    HAS  tagComp=riteWing       tagType=tip
+   SET          capsGroup=wingRib      capsBound=riteTip
+
+   FACE    HAS  tagComp=leftWing       tagType=fusespar
+   SET          capsGroup=wingRib
+
+   FACE    HAS  tagComp=riteWing       tagType=fusespar
+   SET          capsGroup=wingRib
+
+   FACE HAS      tagComp=leftWing tagType=root
+   SET          capsGroup=wingRib
+
+   FACE HAS      tagComp=riteWing tagType=root
+   SET          capsGroup=wingRib
+
+   # without tagType will be classified as a rib
+   FACE    HAS  tagComp=leftWing
+   ANDNOT  HAS  tagType=*
+   SET          capsGroup=wingRib
+
+   FACE    HAS  tagComp=riteWing
+   ANDNOT  HAS  tagType=*
+   SET          capsGroup=wingRib
+>>
+
+# identify faces for csystem
+UDPRIM    editAttr  filename  <<
+   FACE HAS      tagComp=leftWing tagType=upper
+   AND  ADJ2FACE tagComp=riteWing
+   SET           tagCsys=leftWing
+
+   FACE HAS      tagComp=riteWing tagType=upper
+   AND  ADJ2FACE tagComp=leftWing
+   SET           tagCsys=riteWing
+>>
+
+# add Csystems
+SELECT    FACE    $tagCsys $leftWing
+SET       leftWingSkinCsys @sellist
+SELECT    FACE    $tagCsys $riteWing
+SET       riteWingSkinCsys @sellist
+
+STORE     tempBody
+RESTORE   tempBody
+                           # iface;ubar0;vbar0;du2;dv2
+CSYSTEM   leftWingSkin     leftWingSkinCsys;0;0;0;1
+CSYSTEM   riteWingSkin     riteWingSkinCsys;0;0;0;1
+
+# constraints applied to FACEs/EDGEs/NODEs of root rib
+UDPRIM    editAttr  filename <<
+   FACE HAS      tagComp=leftWing tagType=root
+   SET           capsConnectLink=ribRoot
+
+   FACE HAS      tagComp=riteWing tagType=root
+   SET           capsConnectLink=ribRoot
+
+   EDGE ADJ2FACE tagComp=leftWing tagType=root
+   SET           capsConnectLink=ribRoot
+
+   EDGE ADJ2FACE tagComp=riteWing tagType=root
+   SET           capsConnectLink=ribRoot
+
+   NODE ADJ2FACE tagComp=leftWing tagType=root
+   SET           capsConnectLink=ribRoot
+
+   NODE ADJ2FACE tagComp=riteWing tagType=root
+   SET           capsConnectLink=ribRoot
+>>
+
+# define point load location(s)
+UDPRIM    editAttr  filename  <<
+   NODE ADJ2FACE tagComp=leftWing tagType=tip
+   AND  ADJ2FACE tagType=lower
+   AND  ADJ2FACE tagType=spar     tagIndex=1
+   SET           capsLoad=leftPointLoad
+
+   NODE ADJ2FACE tagComp=riteWing tagType=tip
+   AND  ADJ2FACE tagType=lower
+   AND  ADJ2FACE tagType=spar     tagIndex=1
+   SET           capsLoad=ritePointLoad
+>>
+
+# point Connecting to ribRoot to apply boundary conditions
+POINT  wing:xroot+wing:chordr/4 wing:yroot wing:zroot
+   ATTRIBUTE capsConnect       $ribRoot
+   ATTRIBUTE capsGroup         $ribSupport
+   ATTRIBUTE capsConstraint    $ribRootPoint
+   ATTRIBUTE capsDiscipline    $Structure
+   ATTRIBUTE capsAIM           $nastranAIM;astrosAIM;mystranAIM;egadsTessAIM
+   ATTRIBUTE _name             $Support
+
+END

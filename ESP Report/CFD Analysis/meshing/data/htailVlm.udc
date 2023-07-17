@@ -1,0 +1,97 @@
+#.udc to make the htailVlm
+# written by John Dannenhoffer
+
+INTERFACE . ALL
+
+# set a mark so that we can restore the stack back to
+#    where it was when we started
+MARK
+
+# make sure we have the htailOml and htailHinges
+UDPRIM    $/htailOml
+UDPRIM    $/htailHinges
+
+# get the bounding coordinates of the OML
+RESTORE   htailOml
+SET       xmin     @xmin-1
+SET       xmax     @xmax+1
+SET       ymin     @ymin+0.001
+SET       ymax     @ymax-0.001
+SET       zmin     @zmin-1
+SET       zmax     @zmax+1
+STORE     .
+
+# create a group of arfoil sections
+# the order of the sections does not matter as they are sorted in the AIM
+MARK
+   # make left tip, root, rite tip
+   PATBEG    icut  3
+      SET       y  ymin+(ymax-ymin)*(icut-1)/2
+      BOX       xmin  y  zmin  xmax-xmin  0  zmax-zmin
+      RESTORE   htailOml
+      INTERSECT
+          ATTRIBUTE _name             !$Htail_+icut
+      SELECT FACE 1
+          ATTRIBUTE _color             $magenta
+          ATTRIBUTE _bcolor            $magenta
+    PATEND
+
+    # create a section at the htail break
+    IFTHEN ifnan(htail:ybreak,1,0) EQ 0
+       PATBEG    icut  2
+          SET       y  htail:ybreak*(2*icut-3)
+          BOX       xmin  y  zmin  xmax-xmin  0  zmax-zmin
+          RESTORE   htailOml
+          INTERSECT
+             ATTRIBUTE _name    !$Htail_+(3+icut)
+          SELECT FACE 1
+             ATTRIBUTE _color    $magenta
+             ATTRIBUTE _bcolor   $magenta
+       PATEND
+    ENDIF
+
+    # make cuts at the ends of each hinge line
+    PATBEG    ihinge  htail:hinge.nrow*COMP:controls
+
+       # beginning and end of each hinge
+       RESTORE   htailHinge  ihinge
+       SELECT    EDGE  1
+       SET       ybeg     @ymin
+       SET       yend     @ymax
+       GETATTR   tagComp  $tagComp
+       GETATTR   tagType  $tagType
+       GETATTR   tagIndex $tagIndex
+       GETATTR   deflect  $deflect
+       GETATTR   xoverc1  $xoverc1
+       GETATTR   xoverc2  $xoverc2
+       STORE     .
+
+       # create the section at the beginning
+       BOX       xmin  ybeg  zmin  xmax-xmin  0  zmax-zmin
+       RESTORE   htailOml
+       INTERSECT
+           ATTRIBUTE _name                            !$htailControl_+ihinge+$_1
+           ATTRIBUTE !$vlmControl_htailControl+tagIndex xoverc1
+       SELECT FACE 1
+           ATTRIBUTE _color                            $red
+           ATTRIBUTE _bcolor                           $red
+
+       # create the section at the end
+       BOX       xmin  yend  zmin  xmax-xmin  0  zmax-zmin
+       RESTORE   htailOml
+       INTERSECT
+           ATTRIBUTE _name                            !$htailControl_+ihinge+$_2
+           ATTRIBUTE !$vlmControl_htailControl+tagIndex xoverc2
+       SELECT FACE 1
+           ATTRIBUTE _color                            $blue
+           ATTRIBUTE _bcolor                           $blue
+   PATEND
+GROUP
+
+# store the group
+STORE    htailVlm
+
+# make sure that we did not leave any new Bodys on the stack
+STORE     ..
+
+END

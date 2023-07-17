@@ -1,0 +1,50 @@
+# .udc to make the fuseOml
+# written by John Dannenhoffer
+
+INTERFACE . ALL
+
+# set a mark so that we can restore the stack back to
+#    where it was when we started
+MARK
+
+# check to see if the Body already exits
+RESTORE   fuseOml
+
+# if it does not exist, make it now
+CATBEG    $name_not_found
+   MESSAGE Building_fuseOml
+
+   MARK
+
+      # loop through the fuselage cross-sections
+      PATBEG isect fuse:xsects.nrow
+
+         # if size is zero, create a POINT
+         IFTHEN fuse:xsects[isect,1] LT EPS06 AND fuse:xsects[isect,2] LT EPS06
+            POINT fuse:xsects[isect,5] 0 fuse:xsects[isect,6] 0
+
+         # otherwise create ROTATEd and TRANSLATEd super-ellipse
+         ELSE
+            UDPRIM    supell  rx  fuse:xsects[isect,1] \
+                              ry  fuse:xsects[isect,2] \
+                              n   fuse:xsects[isect,3]
+            ROTATEY   90-fuse:xsects[isect,4]  0  0
+            TRANSLATE fuse:xsects[isect,5] 0 fuse:xsects[isect,6]
+         ENDIF
+
+         # make multiple copies if C0 or C1
+         PATBEG    i  2-fuse:xsects[isect,7]
+            RESTORE .
+         PATEND
+      PATEND
+   BLEND  fuse:noselist fuse:taillist
+      ATTRIBUTE tagComp  $fuselage
+
+   # store the final Body
+   STORE     fuseOml
+CATEND
+
+# make sure that we did not leave any new Bodys on the stack
+STORE     ..
+
+END

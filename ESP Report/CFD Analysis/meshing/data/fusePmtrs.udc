@@ -1,0 +1,32 @@
+# .udc to define the DESPMTRs and CFGPMTRs for a fuse
+# written by John Dannenhoffer
+
+INTERFACE . ALL
+
+# fuse Oml
+DIMENSION fuse:noselist  2 4
+DIMENSION fuse:taillist  2 4
+
+DESPMTR   fuse:noselist  "2.5; 0; 1; 0;\  # spanwise nose radius
+                          2.5; 0; 0; 1"   # vertical nose radius
+DESPMTR   fuse:taillist  "0.0; 0; 1; 0;\
+                          0.0; 0; 0; 1"
+
+DESPMTR   fuse:fwdLength     28    # length of forward fuselage
+DESPMTR   fuse:noseHeight     0    # zloc of center of nose
+
+DESPMTR   fuse:midWidth      20    # width  of mid fuselage
+DESPMTR   fuse:midHeight     20    # height of mid fuselage
+DESPMTR   fuse:power          2    # super-ellipse power of mid and aft fuselage
+CFGPMTR   fuse:aftnSec        3    # number of sectins in the aft portion
+DESPMTR   fuse:aftLength     44    # length of aft fuselage
+DESPMTR   fuse:aftWidth       1    # width  of aft fuselage
+DESPMTR   fuse:aftHeight      3    # height of aft fuselage
+DESPMTR   fuse:aftCenter    8.5    # zloc   of aft fuselage
+DESPMTR   fuse:aftTailExt     5    # length of fuselage aft of htail/vtail
+
+# fuse structure
+DESPMTR   fuse:bulkThick      1    # bulkhead thickness
+DESPMTR   fuse:maxspace       7    # maximum spacing between bulkheads
+
+END

@@ -1,0 +1,81 @@
+# .udc to make the Skins view
+# written by John Dannenhoffer
+
+INTERFACE . ALL
+
+# make sure we have the necessary Bodys
+IFTHEN    COMP:wing NE 0
+    UDPRIM    $/wingOml
+ENDIF
+
+IFTHEN    COMP:htail NE 0
+   UDPRIM     $/htailOml
+ENDIF
+
+IFTHEN    COMP:vtail NE 0
+   UDPRIM     $/vtailOml
+ENDIF
+
+IFTHEN    COMP:fuse NE 0
+   UDPRIM     $/fuseOml
+ENDIF
+
+# now that we have all the Bodys, show and Attribte them
+IFTHEN    @stack[1] EQ -1
+   SET    prevStack 0
+ELSE
+   SET    prevStack @stack.size
+ENDIF
+
+# wing
+IFTHEN    COMP:wing NE 0
+   RESTORE   wingOml
+      ATTRIBUTE _name          $wingSkins
+      ATTRIBUTE capsIntent     $Wing
+   SELECT    FACE
+      ATTRIBUTE capsGroup      $wingSkin
+ENDIF
+
+# fuse
+IFTHEN    COMP:fuse NE 0
+   RESTORE   fuseOml
+      ATTRIBUTE _name          $fuseSkins
+      ATTRIBUTE capsIntent     $fuse
+   SELECT    FACE
+      ATTRIBUTE capsGroup      $fuseSkin
+ENDIF
+
+# htail
+IFTHEN    COMP:htail NE 0
+   RESTORE   htailOml
+      ATTRIBUTE _name          $htailSkins
+      ATTRIBUTE capsIntent     $Htail
+   SELECT    FACE
+      ATTRIBUTE capsGroup      $htailSkin
+ENDIF
+
+# vtail
+IFTHEN    COMP:vtail NE 0
+   RESTORE   vtailOml
+      ATTRIBUTE _name          $vtailSkins
+      ATTRIBUTE capsIntent     $Vtail
+   SELECT    FACE
+      ATTRIBUTE capsGroup      $vtailSkin
+ENDIF
+
+# Attributes on all Bodys that were created in this view
+SET         nBody @stack.size
+DIMENSION   bodyList  @stack.size  1
+SET         bodyList  @stack
+PATBEG    ibody  @stack.size-prevStack
+   SELECT    BODY  bodyList[ibody+prevStack]
+      ATTRIBUTE capsAIM            $masstranAIM
+      ATTRIBUTE capsDiscipline     $Structure
+      ATTRIBUTE capsLength         $ft
+      ATTRIBUTE capsReferenceArea  wing:area
+      ATTRIBUTE capsReferenceSpan  wing:span
+      ATTRIBUTE capsReferenceChord wing:mac
+      ATTRIBUTE capsReferenceX     wing:xroot+wing:mac/4
+PATEND
+
+END

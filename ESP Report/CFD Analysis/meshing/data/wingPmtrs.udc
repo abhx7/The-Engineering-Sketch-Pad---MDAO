@@ -1,0 +1,51 @@
+# .udc to define the DESPMTRs and CFGPMTRs for a wing
+# written by John Dannenhoffer
+
+INTERFACE . ALL
+
+# wing Oml
+DESPMTR   wing:area        4240    # area
+DESPMTR   wing:aspect      9.00    # aspect ratio
+DESPMTR   wing:taperi      0.48    # inboard  taper ratio
+DESPMTR   wing:tapero      0.23    # outboard taper ratio
+DESPMTR   wing:sweep       35.0    # leading edge sweep
+DESPMTR   wing:dihedral     7.0    # dihedral
+DESPMTR   wing:break       0.37    # inboard/outboard
+DESPMTR   wing:alphar      -1.0    # setting angle   at root
+DESPMTR   wing:thickr      0.10    # thickness ratio at root
+DESPMTR   wing:camberr     0.08    # camber    ratio at root
+DESPMTR   wing:alphab      -3.0    # setting angle   at break
+DESPMTR   wing:thickb      0.15    # thickness ratio at break
+DESPMTR   wing:camberb     0.04    # camber    ratio at break
+DESPMTR   wing:alphat      -8.0    # setting angle   at tip
+DESPMTR   wing:thickt      0.08    # thickness ratio at tip
+DESPMTR   wing:cambert     0.01    # camber    ratio at tip
+DESPMTR   wing:xroot       50.0    # xloc at root LE
+DESPMTR   wing:zroot       -8.0    # zloc at root LE
+
+# wing hinge lines
+DIMENSION wing:hinge        6 9 1 # ymin                  ymax
+#                           theta   x/c   y/span  z/t     x/c   y/span z/t    gap   grp
+DESPMTR   wing:hinge       "-10.0;  0.75; -0.98;  0.50;   0.75; -0.70; 0.50;  0.25; 1;  \ left aileron
+                            +10.0;  0.75; -0.69;  0.00;   0.75; -0.43; 0.00;  0.25; 2;  \ left oflap
+                            +15.0;  0.85; -0.33;  0.00;   0.90; -0.14; 0.00;  0.25; 3;  \ left iflap
+                            +15.0;  0.90;  0.14;  0.00;   0.85;  0.33; 0.00;  0.25; 3;  \ rite iflap
+                            +10.0;  0.75;  0.43;  0.00;   0.75;  0.69; 0.00;  0.25; 2;  \ rite oflap
+                            +10.0;  0.75;  0.70;  0.50;   0.75;  0.98; 0.50;  0.25; 4"  # rite aileron
+
+# wing structure
+DESPMTR   wing:spar1       0.20    # fraction of chord for LE spar
+DESPMTR   wing:spar2       0.70    # fraction of chord for TE spar
+CFGPMTR   wing:nrib1          2    # number of internal ribs in region 1
+CFGPMTR   wing:nrib2          4    # number of internal ribs in region 1
+CFGPMTR   wing:nrib3         12    # number of internal ribs in region 1
+
+DESPMTR   wing:waffleGap      1    # distance between fuselage and wing root rib
+
+DESPMTR   wing:dxnom        2.0    # nominal .bdf element side length
+
+# set bounds
+LBOUND    wing:aspect     2.00
+UBOUND    wing:aspect    10.00
+
+END

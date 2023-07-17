@@ -1,0 +1,54 @@
+# .udc to set up DESPMTRs, CFGPMTRs, and critical locations and dimensions
+# written by John Dannenhoffer
+
+INTERFACE . ALL
+
+# global tolerance
+set EPS06 1.0e-6
+
+# make a list of the components
+CFGPMTR   COMP:wing     1
+CFGPMTR   COMP:fuse     1
+CFGPMTR   COMP:htail    1
+CFGPMTR   COMP:vtail    1
+CFGPMTR   COMP:nacelle  1
+CFGPMTR   COMP:pylon    1
+CFGPMTR   COMP:payload  1
+
+# controls must be either 0=off or 1=on
+CFGPMTR   COMP:controls 1
+IFTHEN    COMP:controls NE 0  AND  COMP:controls NE 1
+   MESSAGE  COMP:controls_must_be_0_or_1
+   THROW    -999
+ENDIF
+
+# we cannot have a pylon without a nacelle
+IFTHEN    COMP:pylon NE 0  AND  COMP:nacelle EQ 0
+   MESSAGE  cannot_have_a_pylon_without_a_nacelle
+   THROW    -999
+ENDIF
+
+# define the DESPMTRs and CFGPMTRs
+UDPRIM    $/wingPmtrs
+UDPRIM    $/fusePmtrs
+UDPRIM    $/htailPmtrs
+UDPRIM    $/vtailPmtrs
+UDPRIM    $/pylonPmtrs
+UDPRIM    $/nacellePmtrs
+UDPRIM    $/payloadPmtrs
+
+# put sharp trailing edges on all aero surfaces
+SET       SHARP_TE   1
+
+# compute critical locations / dimensions
+UDPRIM    $/wingCalc
+UDPRIM    $/htailCalc
+UDPRIM    $/vtailCalc
+UDPRIM    $/fuseCalc
+UDPRIM    $/pylonCalc    # calls nacelleCalc
+
+# CG location used to drive design parametres, not the actual CG
+DIMENSION CG:ref  3 1
+DESPMTR   CG:ref  "90; 0; 0"
+
+END

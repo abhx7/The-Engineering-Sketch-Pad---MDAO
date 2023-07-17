@@ -1,0 +1,176 @@
+# .udc to make the fuseWaffle
+# written by John Dannenhoffer
+
+INTERFACE . ALL
+
+# set a mark so that we can restore the stack back to
+#    where it was when we started
+MARK
+
+# check to see if the Body already exits
+RESTORE   fuseWaffle
+
+# if it does not exist, make it now
+CATBEG    $name_not_found
+   MESSAGE Building_fuseWaffle
+
+   # make sure the fuseOml, fuseIml, and wingWaffle exist
+   UDPRIM    $/fuseOml
+   UDPRIM    $/fuseIml
+   UDPRIM    $/wingWaffle
+   UDPRIM    $/htailWaffle
+
+   # get the extents of the fuseOml
+   RESTORE   fuseOml
+   SET       xmin      @xmin
+   SET       xmax      @xmax
+   SET       ymin      @ymin
+   SET       ymax      @ymax
+   SET       zmin      @zmin
+   SET       zmax      @zmax
+   STORE     .
+
+   # make a list of the bulkhead locations
+   DIMENSION xbulk    200  1    # over-sized for now
+   SET       nbulk    0
+
+   # bulkhead behind the nose
+   SET       nbulk         nbulk+1
+   SET       xbulk[nbulk]  fuse:noselist[1,1]
+
+   # bulkheads in forward section
+   SET       xlen     fuse:fwdLength-fuse:noselist[1,1]
+   SET       n        xlen/fuse:maxspace
+   IFTHEN    n-int(n) GT EPS06
+      SET    n        int(n)+1
+   ELSE
+      SET    n        int(n)
+   ENDIF
+   PATBEG    i        n-1
+      SET    nbulk         nbulk+1
+      SET    xbulk[nbulk]  fuse:noselist[1,1]+i*xlen/n
+   PATEND
+
+   # bulkhead at end of forward section
+   SET       nbulk         nbulk+1
+   SET       xbulk[nbulk]  fuse:fwdLength
+
+   # bulkheads in mid section, forward of wing spar 1
+   SET       xlen     wing:xspar1-fuse:fwdLength
+   SET       n        xlen/fuse:maxspace
+   IFTHEN    n-int(n) GT EPS06
+      SET    n        int(n)+1
+   ELSE
+      SET    n        int(n)
+   ENDIF
+   PATBEG    i        n-1
+      SET    nbulk         nbulk+1
+      SET    xbulk[nbulk]  fuse:fwdLength+i*xlen/n
+   PATEND
+
+   # bulkhead at wing spar 1
+   SET       nbulk         nbulk+1
+   SET       xbulk[nbulk]  wing:xspar1
+
+   # bulkheads between wing spar 1 and wing spar 2
+   SET       xlen     wing:xspar2-wing:xspar1
+   SET       n        xlen/fuse:maxspace
+   IFTHEN    n-int(n) GT EPS06
+      SET    n        int(n)+1
+   ELSE
+      SET    n        int(n)
+   ENDIF
+   PATBEG    i        n-1
+      SET    nbulk         nbulk+1
+      SET    xbulk[nbulk]  wing:xspar1+i*xlen/n
+   PATEND
+
+   # bulkhead at wing spar 2
+   SET       nbulk         nbulk+1
+   SET       xbulk[nbulk]  wing:xspar2
+
+   # bulkheads behind wing in mid section
+   SET       xlen     (fuse:fwdLength+fuse:midLength)-wing:xspar2
+   SET       n        xlen/fuse:maxspace
+   IFTHEN    n-int(n) GT EPS06
+      SET    n        int(n)+1
+   ELSE
+      SET    n        int(n)
+   ENDIF
+   PATBEG    i        n-1
+      SET    nbulk         nbulk+1
+      SET    xbulk[nbulk]  wing:xspar2+i*xlen/n
+   PATEND
+
+   # bulkhead at end of mid section
+   SET       nbulk         nbulk+1
+   SET       xbulk[nbulk]  fuse:fwdLength+fuse:midLength
+
+   # bulkheads in aft section, forward of htail spar 1
+   SET       xlen     htail:xspar1-(fuse:fwdLength+fuse:midLength)
+   SET       n        xlen/fuse:maxspace
+   IFTHEN    n-int(n) GT EPS06
+      SET    n        int(n)+1
+   ELSE
+      SET    n        int(n)
+   ENDIF
+   PATBEG    i        n-1
+      SET    nbulk         nbulk+1
+      SET    xbulk[nbulk]  fuse:fwdLength+fuse:midLength+i*xlen/n
+   PATEND
+
+   # bulkhead at htail spar 4
+   SET       nbulk         nbulk+1
+   SET       xbulk[nbulk]  htail:xspar1
+
+   # bulkheads between htail spar 4 and htail spar 5
+   SET       xlen     htail:xspar2-htail:xspar1
+   SET       n        xlen/fuse:maxspace
+   IFTHEN    n-int(n) GT EPS06
+      SET    n        int(n)+1
+   ELSE
+      SET    n        int(n)
+   ENDIF
+   PATBEG    i        n-1
+      SET    nbulk         nbulk+1
+      SET    xbulk[nbulk]  htail:xspar1+i*xlen/n
+   PATEND
+
+   # bulkhead at htail spar 5
+   SET       nbulk         nbulk+1
+   SET       xbulk[nbulk]  htail:xspar2
+
+   # bulkheads behind htail spar 5
+   SET       xlen     (fuse:fwdLength+fuse:midLength+fuse:aftLength)-htail:xspar2
+   SET       n        xlen/fuse:maxspace
+   IFTHEN    n-int(n) GT EPS06
+      SET    n        int(n)+1
+   ELSE
+      SET    n        int(n)
+   ENDIF
+   PATBEG    i        n-1
+      SET    nbulk         nbulk+1
+      SET    xbulk[nbulk]  htail:xspar2+i*xlen/n
+   PATEND
+
+   # bulkhead at end
+   SET       nbulk         nbulk+1
+   SET       xbulk[nbulk]  fuse:fwdLength+fuse:midLength+fuse:aftLength
+
+   # redimension xbulk
+   DIMENSION xbulk  nbulk  1
+
+   # make the waffle
+   UDPARG    radwaf    ysize  2*@ymax+1
+   UDPARG    radwaf    zsize  2*@zmax+1
+   UDPARG    radwaf    nspoke 4
+   UDPRIM    radwaf    xframe xbulk
+
+   # store the final Body
+   STORE     fuseWaffle
+CATEND
+
+# make sure that we did not leave any new Bodys on the stack
+STORE     ..
+
+END

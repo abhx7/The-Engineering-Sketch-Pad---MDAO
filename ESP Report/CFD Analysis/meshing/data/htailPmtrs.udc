@@ -1,0 +1,28 @@
+# .udc to define the DESPMTRs and CFGPMTRs for a htail
+# written by John Dannenhoffer
+
+INTERFACE . ALL
+
+# htail Oml
+DESPMTR   htail:vc         0.55    # htail volume coefficient
+DESPMTR   htail:length       85    # distance between htail root and wing root
+DESPMTR   htail:aspect     2.15    # htail aspect ratio
+DESPMTR   htail:taper      0.33    # htail taper ratio
+DESPMTR   htail:sweep        40    # htail sweep
+DESPMTR   htail:dihedral     12    # htail dihedral
+DESPMTR   htail:thick      0.08    # htail thickness ratio
+DESPMTR   htail:zroot         6    # zloc of root LE
+
+# htail hinge lines
+DIMENSION htail:hinge       2 9 1 # ymin                  ymax
+#                           theta   x/c   y/span  z/t     x/c   y/span z/t    gap   grp
+DESPMTR   htail:hinge      "  5.0;  0.60; -0.95;  0.50;   0.60; -0.20;  0.50;  0.50; 1;  \ left elevator
+                              5.0;  0.60;  0.20;  0.50;   0.60;  0.95;  0.50;  0.50; 1"  # rite elevator
+
+# htail structure
+DESPMTR   htail:waffleGap     1
+DESPMTR   htail:spar1      0.15
+DESPMTR   htail:spar2      0.55
+DESPMTR   htail:nrib         15
+
+END

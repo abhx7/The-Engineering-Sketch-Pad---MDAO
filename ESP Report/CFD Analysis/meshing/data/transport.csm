@@ -1,0 +1,50 @@
+# transport
+# written by John Dannenhoffer
+
+# define the views
+CFGPMTR   VIEW:Concept          1
+CFGPMTR   VIEW:Vlm              0
+
+CFGPMTR   VIEW:CfdInviscid      0
+CFGPMTR   VIEW:CfdViscous       0
+
+CFGPMTR   VIEW:Bem              0
+CFGPMTR   VIEW:Skins            0
+CFGPMTR   VIEW:Cantilever       0
+CFGPMTR   VIEW:SimplySupport    0
+
+UDPRIM    $/transport_init
+
+IFTHEN    VIEW:Concept      NE  0
+   UDPRIM    $/viewConcept
+ENDIF
+
+IFTHEN    VIEW:Vlm          NE  0
+   UDPRIM    $/viewVlm
+ENDIF
+
+IFTHEN    VIEW:CfdInviscid  NE  0
+   UDPRIM    $/viewCfdInviscid
+ENDIF
+
+IFTHEN    VIEW:CfdViscous   NE  0
+   UDPRIM    $/viewCfdViscous
+ENDIF
+
+IFTHEN    VIEW:Bem          NE  0
+   UDPRIM    $/viewBem
+ENDIF
+
+IFTHEN    VIEW:Skins        NE  0
+   UDPRIM    $/viewSkins
+ENDIF
+
+IFTHEN    VIEW:Cantilever NE 0
+   UDPRIM    $/viewCantilever
+ENDIF
+
+IFTHEN    VIEW:SimplySupport NE 0
+   UDPRIM    $/viewSimplySupport
+ENDIF
+
+END

@@ -1,0 +1,92 @@
+# .udc to make the Vlm view
+# written by John Dannenhoffer
+
+INTERFACE . ALL
+
+# make sure we have the necessary Bodys
+IFTHEN    COMP:wing NE 0
+   UDPRIM    $/wingVlm
+ENDIF
+IFTHEN    COMP:htail NE 0
+   UDPRIM    $/htailVlm
+ENDIF
+IFTHEN    COMP:vtail NE 0
+   UDPRIM    $/vtailVlm
+ENDIF
+
+# now that we have all the Bodys, show and Attribute them
+IFTHEN    @stack[1] EQ -1
+   SET    prevStack 0
+ELSE
+   SET    prevStack @stack.size
+ENDIF
+
+# wing
+IFTHEN    COMP:wing NE 0
+   RESTORE     wingVlm
+   SET         nWingBody @stack.size-prevStack
+   DIMENSION   bodyList  @stack.size  1
+   SET         bodyList  @stack
+   PATBEG    ibody  nWingBody-prevStack
+      SELECT    BODY  bodyList[ibody+prevStack]
+         ATTRIBUTE capsAIM            $avlAIM;frictionAIM;astrosAIM;nastranAIM;egadsTessAIM
+         ATTRIBUTE capsGroup          $Wing
+         ATTRIBUTE capsType           $Wing
+      SELECT    FACE
+         ATTRIBUTE capsGroup          $Wing
+   PATEND
+ELSE
+   SET         nWingBody 0
+ENDIF
+
+# htail
+IFTHEN    COMP:htail NE 0
+   RESTORE     htailVlm
+   SET         nHtailBody @stack.size-nWingBody-prevStack
+   DIMENSION   bodyList  @stack.size  1
+   SET         bodyList  @stack
+   PATBEG    ibody  nHtailBody
+      SELECT    BODY  bodyList[ibody+nWingBody+prevStack]
+         ATTRIBUTE capsAIM            $avlAIM;frictionAIM;astrosAIM;nastranAIM;egadsTessAIM
+         ATTRIBUTE capsGroup          $Htail
+         ATTRIBUTE capsType           $Horizontal_Tail
+      SELECT    FACE
+         ATTRIBUTE capsGroup          $Htail
+   PATEND
+ELSE
+   SET          nHtailBody 0
+ENDIF
+
+# vtail
+IFTHEN    COMP:vtail NE 0
+   RESTORE     vtailVlm
+   SET         nVtailBody @stack.size-nWingBody-nHtailBody-prevStack
+   DIMENSION   bodyList  @stack.size  1
+   SET         bodyList  @stack
+   PATBEG    ibody  nVtailBody
+      SELECT    BODY  bodyList[ibody+nWingBody+nHtailBody+prevStack]
+         #ATTRIBUTE capsAIM            $avlAIM;frictionAIM;astrosAIM;nastranAIM;egadsTessAIM
+         ATTRIBUTE capsGroup          $Vtail
+         ATTRIBUTE capsType           $Vertical_Tail
+      SELECT    FACE
+         ATTRIBUTE capsGroup          $Vtail
+   PATEND
+ELSE
+   SET         nVtailBody 0
+ENDIF
+
+# Attributes on all Bodys that were created in this view
+SET         nBody     @stack.size-prevStack
+DIMENSION   bodyList  @stack.size  1
+SET         bodyList  @stack
+PATBEG    ibody  nBody 
+   SELECT    BODY  bodyList[ibody+prevStack]
+      ATTRIBUTE capsLength         $ft
+      ATTRIBUTE capsDiscipline     $Aerodynamic
+      ATTRIBUTE capsReferenceArea  wing:area
+      ATTRIBUTE capsReferenceSpan  wing:span
+      ATTRIBUTE capsReferenceChord wing:mac
+      ATTRIBUTE capsReferenceX     wing:xroot+wing:mac/4
+PATEND
+
+END

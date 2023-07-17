@@ -1,0 +1,14 @@
+# .udc to define the DESPMTRs and CFGPMTRs for a nacelle
+# written by John Dannenhoffer
+
+INTERFACE . ALL
+
+DESPMTR   nacelle:yb           0.30    # semispan location of nacelle
+DESPMTR   nacelle:dxnose      -10.0    # x offset of nose from wing leading edge
+DESPMTR   nacelle:dznose       -7.5    # z offset of nose from wing leading edge
+DESPMTR   nacelle:length      30.00    # length of nacelle
+DESPMTR   nacelle:diameter     8.00    # diameter of nacelle
+DESPMTR   nacelle:thick        0.07    # thickness ratio of nacelle airfoil
+DESPMTR   nacelle:camber       0.02    # camber ratio of nacelle airfoil
+
+END

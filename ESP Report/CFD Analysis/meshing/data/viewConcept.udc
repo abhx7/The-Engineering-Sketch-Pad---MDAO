@@ -1,0 +1,89 @@
+# .udc to make the Concept view
+# written by John Dannenhoffer
+
+INTERFACE . ALL
+
+# make sure we have the necessary Bodys
+IFTHEN    COMP:wing NE 0
+    UDPRIM    $/wingOml
+    UDPRIM    $/wingWaffle
+    UDPRIM    $/wingHinges
+ENDIF
+
+IFTHEN    COMP:nacelle NE 0
+    UDPRIM    $/nacelleOml
+ENDIF
+
+IFTHEN    COMP:htail NE 0
+   UDPRIM     $/htailOml
+   UDPRIM     $/htailWaffle
+   UDPRIM     $/htailHinges
+ENDIF
+
+IFTHEN    COMP:vtail NE 0
+   UDPRIM     $/vtailOml
+   UDPRIM     $/vtailWaffle
+   UDPRIM     $/vtailHinges
+ENDIF
+
+IFTHEN    COMP:fuse NE 0
+   UDPRIM     $/fuseOml
+   UDPRIM     $/fuseWaffle
+ENDIF
+
+IFTHEN    COMP:payload NE 0
+   UDPRIM     $/payload
+ENDIF
+
+# now that we have all the Bodys, show them
+IFTHEN    COMP:wing NE 0
+   RESTORE    wingOml
+      ATTRIBUTE _name $wingOml
+   RESTORE    wingWaffle
+      ATTRIBUTE _name $wingWaffle
+   PATBEG     ihinge  wing:hinge.nrow*COMP:controls
+      RESTORE wingHinge ihinge
+   PATEND
+ENDIF
+
+IFTHEN    COMP:nacelle NE 0
+   RESTORE   nacelleOml
+      ATTRIBUTE _name $leftNacelle
+
+   RESTORE   nacelleOml
+   MIRROR    0  1  0  0
+      ATTRIBUTE _name $riteNacelle
+ENDIF
+
+IFTHEN    COMP:fuse NE 0
+   RESTORE    fuseOml
+      ATTRIBUTE _name $fuseOml
+   RESTORE    fuseWaffle
+      ATTRIBUTE _name $fuseWaffle
+ENDIF
+
+IFTHEN    COMP:htail NE 0
+   RESTORE    htailOml
+      ATTRIBUTE _name $htailOml
+   RESTORE    htailWaffle
+      ATTRIBUTE _name $htailWaffle
+   PATBEG     ihinge  htail:hinge.nrow*COMP:controls
+      RESTORE htailHinge ihinge
+   PATEND
+ENDIF
+
+IFTHEN    COMP:vtail NE 0
+   RESTORE    vtailOml
+      ATTRIBUTE _name $vtailOml
+   RESTORE    vtailWaffle
+      ATTRIBUTE _name $vtailWaffle
+   PATBEG     ihinge  vtail:hinge.nrow*COMP:controls
+      RESTORE vtailHinge ihinge
+   PATEND
+ENDIF
+
+IFTHEN    COMP:payload NE 0
+   RESTORE   payload
+ENDIF
+
+END

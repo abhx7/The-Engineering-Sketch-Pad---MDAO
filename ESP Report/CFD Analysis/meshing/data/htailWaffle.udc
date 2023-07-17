@@ -1,0 +1,148 @@
+# .udc to make the htailWaffle
+# written by John Dannenhoffer
+
+INTERFACE . ALL
+
+# set a mark so that we can restore the stack back to
+#    where it was when we started
+MARK
+
+# check to see if the Body already exits
+RESTORE   htailWaffle
+
+# if it does not exist, make it now
+CATBEG    $name_not_found
+   MESSAGE Building_htailWaffle
+
+   # make sure the htailOml exists
+   UDPRIM    $/htailOml
+
+   # bounding box of the htail
+   SET        yA            0
+   SET        xA            htail:xroot
+   SET        yB            -htail:ytip
+   SET        xB            htail:xtip
+   SET        yC            0
+   SET        xC            htail:xroot+htail:chordr
+   SET        yD            -htail:ytip
+   SET        xD            htail:xtip+htail:chordt
+
+   SET        xmid          fuse:fwdLength+fuse:midLength
+
+   # intersect the fuselage and LE
+   SET       s   0.5
+   SET       t   0.5
+
+   SOLBEG    s;t
+      SOLCON xA+(xB-xA)*s-(xmid+(fuse:Length-xmid)*t)
+      SOLCON yA+(yB-yA)*s-(fuse:midWidth/2+(fuse:aftWidth/2-fuse:midWidth/2)*t)
+   SOLEND
+
+   SET       xE   xA+(xB-xA)*s
+   SET       yE   yA+(yB-yA)*s
+
+   # intersect the fuselage and TE
+   SOLBEG    s;t
+      SOLCON xC+(xD-xC)*s-(xmid+(fuse:Length-xmid)*t)
+      SOLCON yA+(yB-yA)*s-(fuse:midWidth/2+(fuse:aftWidth/2-fuse:midWidth/2)*t)
+   SOLEND
+
+   SET        xF   xC+(xD-xC)*s
+   SET        yF   yC+(yD-yC)*s
+
+   RESTORE    htailOml
+   SET        zmin          @zmin-0.1
+   SET        zmax          @zmax+0.1
+   STORE      .
+
+   UDPRIM     waffle        depth zmax-zmin  filename <<
+
+   # construction lines for wing outline
+   CPOINT A   AT  xA  yA
+   CPOINT B   AT  xB  yB
+   CPOINT C   AT  xC  yC
+   CPOINT D   AT  xD  yD
+
+   CLINE  AB      A   B
+   CLINE  AC      A   C
+   CLINE  BD      B   D
+   CLINE  CD      C   D
+
+   # line for rib along the fuselage
+   CPOINT E   ON AB YLOC yE+htail:waffleGap
+   CPOINT F   ON CD YLOC yF+htail:waffleGap
+
+   CLINE  EF   E   F
+
+   # construction lines for htail-box
+   CPOINT G   ON  EF  FRAC  htail:spar1
+   CPOINT H   ON  EF  FRAC  htail:spar2
+
+   CPOINT I   ON  AC  XLOC x@G
+   CPOINT J   ON  AC  XLOC x@H
+
+   CLINE  IG   I   G
+   CLINE  JH   J   H
+
+   # construction lines for spars
+   CPOINT K   ON  BD  FRAC  htail:spar1
+   CPOINT L   ON  BD  FRAC  htail:spar2
+
+   CLINE  GK   G   K
+   CLINE  HL   H   L
+
+   # spars
+   LINE  GK  G  K  tagType=spar  tagIndex=1
+   LINE  HL  H  L  tagType=spar  tagIndex=2
+
+   # htail tip
+   LINE  KL  K  L  tagType=tip
+
+   # fuselage htail box
+   POINT    X   AT  x@G 0
+   LINE     .       G   X  tagType=fusespar  tagIndex=1
+
+   POINT    X   AT  x@H 0
+   LINE     .       H   X  tagType=fusespar  tagIndex=2
+
+   # ribs
+   PATBEG irib htail:nrib
+      POINT M AT x@H+(x@L-x@H)*(irib-1)/htail:nrib y@H+(y@L-y@H)*(irib-1)/htail:nrib
+      POINT N ON GK PERP M
+      LINE   .       M   N tagType=rib   tagIndex=!val2str(irib+1,0)
+   PATEND
+
+>>
+
+   # move down to be coincident with htailOml
+   TRANSLATE  0  0  zmin
+
+   # attribute the rite htail Faces
+   SELECT    FACE
+      ATTRIBUTE tagComp $riteHtail
+
+   # make a copy for the left htail
+   RESTORE   .
+   MIRROR    0  1  0  0
+
+   # re-attribute the left htail Faces
+   SELECT    FACE
+      ATTRIBUTE tagComp $leftHtail
+
+   # join to make a single waffle
+   JOIN
+
+   # get the locations of the htail spars through the fuselage
+   SELECT    FACE          $tagType  $fusespar  $tagIndex  $1
+   SET       htail:xspar1  @xcg
+   SELECT    FACE          $tagType  $fusespar  $tagIndex  $2
+   SET       htail:xspar2  @xcg
+
+   # store the final Body
+   STORE     htailWaffle
+CATEND
+
+# make sure that we did not leave any new Bodys on the stack
+STORE     ..
+
+END

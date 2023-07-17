@@ -1,0 +1,16 @@
+# .udc to calculate critial locations and dimensions for a pylon
+# written by John Dannenhoffer
+
+INTERFACE . ALL
+
+# compute pod and pylon critical locations / dimensions
+SET       pylon:yle      nacelle:yb*wing:ytip
+SET       pylon:xle      wing:xroot-pylon:yle*tand(wing:sweep)
+SET       pylon:zle      wing:zroot-pylon:yle*tand(wing:dihedral)
+
+UDPRIM  $/nacelleCalc
+
+SET       pylon:x1       pylon:xle+pylon:dxwing
+SET       pylon:x2       nacelle:x+pylon:dxnacelle
+
+END

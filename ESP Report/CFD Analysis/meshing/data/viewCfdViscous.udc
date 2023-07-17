@@ -1,0 +1,609 @@
+# .udc to make the CfdViscous view
+# written by John Dannenhoffer
+
+INTERFACE . ALL
+
+# constants used by aflr4
+SET        AFLR4_Cmp_Fuse     1
+SET        AFLR4_Cmp_Wing     2
+SET        AFLR4_Cmp_Htail    3
+SET        AFLR4_Cmp_Vtail    4
+SET        AFLR4_Cmp_Nacelle  5
+SET        AFLR4_Cmp_Pylon    6
+SET        AFLR4_Cmp_Farfield 7
+
+# get the Oml first
+UDPRIM    $/viewOml
+
+# if there are multiple Bodys on the stack, put the one with the
+#    largest volume on the top of the stack
+IFTHEN    @stack.size GT 1
+   DIMENSION bodyList @stack.size 1
+   SET       bodyList @stack
+   SET       itop     0
+   SET       vmax     0
+
+   PATBEG    ibody  bodyList.size
+      SELECT    BODY    bodyList[ibody]
+      IFTHEN    @volume GT vmax
+         SET    itop  bodyList[ibody]
+         SET    vmax  @volume
+      ENDIF
+      STORE     bodyList  ibody
+   PATEND
+
+   PATBEG    ibody  bodyList.size
+      IFTHEN    bodyList[ibody] NE itop
+         RESTORE   bodyList  bodyList.size+1-ibody
+      ENDIF
+   PATEND
+   PATBEG    ibody  bodyList.size
+      IFTHEN    bodyList[ibody] EQ itop
+         RESTORE   bodyList  bodyList.size+1-ibody
+      ENDIF
+   PATEND
+ENDIF
+
+STORE     tempBody
+
+# add the control surfaces to the wing
+IFTHEN    COMP:wing NE 0
+
+   # set the at-parameters for the wing
+   RESTORE   wingOml
+   STORE     .
+
+   SET       xmin   @xmin
+   SET       xmax   @xmax
+   SET       ymin   @ymin
+   SET       ymax   @ymax
+   SET       zmin   @zmin
+   SET       zmax   @zmax
+
+   # loop through all the hinge lines
+   PATBEG ihinge wing:hinge.nrow*COMP:controls
+
+      # get the hinge info
+      RESTORE   wingHinge ihinge
+      SELECT   EDGE 1
+          GETATTR  deflect  $deflect
+          GETATTR  ds       $gap
+
+      EVALUATE EDGE @nbody 1 $beg
+      SET      xbeg  @edata[2]
+      SET      ybeg  @edata[3]
+      SET      zbeg  @edata[4]
+
+      EVALUATE EDGE @nbody 1 $end
+      SET      xend  @edata[2]
+      SET      yend  @edata[3]
+      SET      zend  @edata[4]
+
+      IFTHEN    ybeg LT yend
+         SET     swap  xbeg
+         SET     xbeg  xend
+         SET     xend  swap
+
+         SET     swap  ybeg
+         SET     ybeg  yend
+         SET     yend  swap
+
+         SET     swap  zbeg
+         SET     zbeg  zend
+         SET     zend  swap
+      ENDIF
+      STORE    .
+
+      # make the flap by intersecting with a cutout
+      RESTORE   tempBody
+
+      SKBEG     xmax+1  yend   zmin-1
+         LINSEG xend    yend   zmin-1
+         LINSEG xbeg    ybeg   zmin-1
+         LINSEG xmax+1  ybeg   zmin-1
+         LINSEG xmax+1  yend   zmin-1
+      SKEND
+      EXTRUDE   0  0  zmax-zmin+2
+      INTERSECT
+         ATTRIBUTE tagComp   $wingControl
+         ATTRIBUTE compIndex !val2str(ihinge,0)
+      SELECT    EDGE
+         ATTRIBUTE tagComp   $wingControl
+         ATTRIBUTE compIndex !val2str(ihinge,0)
+
+      # rotate and store the flap
+      UDPARG    $$/gen_rot  xbeg  xbeg   ybeg  ybeg   zbeg  zbeg
+      UDPARG    $$/gen_rot  xend  xend   yend  yend   zend  zend
+      UDPRIM    $$/gen_rot  rotang  -deflect
+
+      STORE    WingControl ihinge
+
+      # cut the wing to make room for the flap
+      RESTORE   tempBody
+      SET       L      hypot(yend-ybeg,xend-xbeg)
+      SET       Xbeg   xbeg+ds*(L+xend-xbeg)/(yend-ybeg)
+      SET       Ybeg   ybeg+ds
+      SET       Xend   xend+ds*(L-xend+xbeg)/(yend-ybeg)
+      SET       Yend   yend-ds
+
+      SKBEG     xmax+1+ds  Yend   zmin-1
+         LINSEG Xend       Yend   zmin-1
+         LINSEG Xbeg       Ybeg   zmin-1
+         LINSEG xmax+1+ds  Ybeg   zmin-1
+         LINSEG xmax+1+ds  Yend   zmin-1
+      SKEND
+      IFTHEN    Ybeg LT 0
+         EXTRUDE   0  0  zmax-zmin+2
+            ATTRIBUTE tagComp   $leftWing
+            ATTRIBUTE tagType   $filler
+      ELSE
+         EXTRUDE   0  0  zmax-zmin+2
+            ATTRIBUTE tagComp   $riteWing
+            ATTRIBUTE tagType   $filler
+      ENDIF
+      SUBTRACT
+      STORE     tempBody
+   PATEND
+ENDIF
+
+# add the control surfaces to the htail
+IFTHEN    COMP:htail NE 0
+
+   # set the at-parameters for the htail
+   RESTORE   htailOml
+   STORE     .
+
+   SET       xmin   @xmin
+   SET       xmax   @xmax
+   SET       ymin   @ymin
+   SET       ymax   @ymax
+   SET       zmin   @zmin
+   SET       zmax   @zmax
+
+   # loop through all the hinge lines
+   PATBEG ihinge htail:hinge.nrow*COMP:controls
+
+      # get the hinge info
+      RESTORE   htailHinge ihinge
+      SELECT   EDGE 1
+          GETATTR  deflect  $deflect
+          GETATTR  ds       $gap
+
+      EVALUATE EDGE @nbody 1 $beg
+      SET      xbeg  @edata[2]
+      SET      ybeg  @edata[3]
+      SET      zbeg  @edata[4]
+
+      EVALUATE EDGE @nbody 1 $end
+      SET      xend  @edata[2]
+      SET      yend  @edata[3]
+      SET      zend  @edata[4]
+
+      IFTHEN    ybeg LT yend
+         SET     swap  xbeg
+         SET     xbeg  xend
+         SET     xend  swap
+
+         SET     swap  ybeg
+         SET     ybeg  yend
+         SET     yend  swap
+
+         SET     swap  zbeg
+         SET     zbeg  zend
+         SET     zend  swap
+      ENDIF
+      STORE    .
+
+      # make the flap by intersecting with a cutout
+      RESTORE   tempBody
+
+      SKBEG     xmax+1  yend   zmin-1
+         LINSEG xend    yend   zmin-1
+         LINSEG xbeg    ybeg   zmin-1
+         LINSEG xmax+1  ybeg   zmin-1
+         LINSEG xmax+1  yend   zmin-1
+      SKEND
+      EXTRUDE   0  0  zmax-zmin+2
+      INTERSECT
+         ATTRIBUTE tagComp   $htailControl
+         ATTRIBUTE compIndex !val2str(ihinge,0)
+      SELECT    EDGE
+         ATTRIBUTE tagComp   $htailControl
+         ATTRIBUTE compIndex !val2str(ihinge,0)
+
+      # rotate and store the flap
+      UDPARG    $$/gen_rot  xbeg  xbeg   ybeg  ybeg   zbeg  zbeg
+      UDPARG    $$/gen_rot  xend  xend   yend  yend   zend  zend
+      UDPRIM    $$/gen_rot  rotang  -deflect
+
+      STORE    HtailControl ihinge
+
+      # cut the htail to make room for the flap
+      RESTORE   tempBody
+      SET       L      hypot(yend-ybeg,xend-xbeg)
+      SET       Xbeg   xbeg+ds*(L+xend-xbeg)/(yend-ybeg)
+      SET       Ybeg   ybeg+ds
+      SET       Xend   xend+ds*(L-xend+xbeg)/(yend-ybeg)
+      SET       Yend   yend-ds
+
+      SKBEG     xmax+1+ds  Yend   zmin-1
+         LINSEG Xend       Yend   zmin-1
+         LINSEG Xbeg       Ybeg   zmin-1
+         LINSEG xmax+1+ds  Ybeg   zmin-1
+         LINSEG xmax+1+ds  Yend   zmin-1
+      SKEND
+      IFTHEN    Ybeg LT 0
+         EXTRUDE   0  0  zmax-zmin+2
+            ATTRIBUTE tagComp   $leftHtail
+            ATTRIBUTE tagType   $filler
+      ELSE
+         EXTRUDE   0  0  zmax-zmin+2
+            ATTRIBUTE tagComp   $riteHtail
+            ATTRIBUTE tagType   $filler
+      ENDIF
+      SUBTRACT
+      STORE     tempBody
+   PATEND
+ENDIF
+
+# add the control surfaces to the vtail
+IFTHEN    COMP:vtail NE 0
+
+   # set the at-parameters for the vtail
+   RESTORE   vtailOml
+   ROTATEX   -90  0  0
+   STORE     .
+
+   SET       xmin   @xmin
+   SET       xmax   @xmax
+   SET       ymin   @ymin
+   SET       ymax   @ymax
+   SET       zmin   @zmin
+   SET       zmax   @zmax
+
+   # loop through all the hinge lines
+   PATBEG ihinge vtail:hinge.nrow*COMP:controls
+
+      # get the hinge info
+      RESTORE   vtailHinge ihinge
+      ROTATEX   -90  0  0
+      SELECT    EDGE 1
+          GETATTR  deflect  $deflect
+          GETATTR  ds       $gap
+
+      EVALUATE EDGE @nbody 1 $beg
+      SET      xbeg  @edata[2]
+      SET      ybeg  @edata[3]
+      SET      zbeg  @edata[4]
+
+      EVALUATE EDGE @nbody 1 $end
+      SET      xend  @edata[2]
+      SET      yend  @edata[3]
+      SET      zend  @edata[4]
+
+      IFTHEN    ybeg LT yend
+         SET     swap  xbeg
+         SET     xbeg  xend
+         SET     xend  swap
+
+         SET     swap  ybeg
+         SET     ybeg  yend
+         SET     yend  swap
+
+         SET     swap  zbeg
+         SET     zbeg  zend
+         SET     zend  swap
+      ENDIF
+      STORE    .
+
+      # make the flap by intersecting with a cutout
+      RESTORE   tempBody
+      ROTATEX   -90  0  0
+
+      SKBEG     xmax+1  yend   zmin-1
+         LINSEG xend    yend   zmin-1
+         LINSEG xbeg    ybeg   zmin-1
+         LINSEG xmax+1  ybeg   zmin-1
+         LINSEG xmax+1  yend   zmin-1
+      SKEND
+      EXTRUDE   0  0  zmax-zmin+2
+      INTERSECT
+         ATTRIBUTE tagComp   $vtailControl
+         ATTRIBUTE compIndex !val2str(ihinge,0)
+      SELECT    EDGE
+         ATTRIBUTE tagComp   $vtailControl
+         ATTRIBUTE compIndex !val2str(ihinge,0)
+
+      # rotate and store the flap
+      UDPARG    $$/gen_rot  xbeg  xbeg   ybeg  ybeg   zbeg  zbeg
+      UDPARG    $$/gen_rot  xend  xend   yend  yend   zend  zend
+      UDPRIM    $$/gen_rot  rotang  -deflect
+
+      ROTATEX   +90  0  0
+      STORE    VtailControl ihinge
+
+      # cut the vtail to make room for the flap
+      RESTORE   tempBody
+      ROTATEX   -90  0  0
+      SET       L      hypot(yend-ybeg,xend-xbeg)
+      SET       Xbeg   xbeg+ds*(L+xend-xbeg)/(yend-ybeg)
+      SET       Ybeg   ybeg+ds
+      SET       Xend   xend+ds*(L-xend+xbeg)/(yend-ybeg)
+      SET       Yend   yend-ds
+
+      SKBEG     xmax+1+ds  Yend   zmin-1
+         LINSEG Xend       Yend   zmin-1
+         LINSEG Xbeg       Ybeg   zmin-1
+         LINSEG xmax+1+ds  Ybeg   zmin-1
+         LINSEG xmax+1+ds  Yend   zmin-1
+      SKEND
+      EXTRUDE   0  0  zmax-zmin+2
+         ATTRIBUTE tagComp   $vtail
+         ATTRIBUTE tagType   $filler
+      SUBTRACT
+      ROTATEX   +90  0  0
+      STORE     tempBody
+   PATEND
+ENDIF
+
+# get the aircraft and attribute it
+RESTORE   tempBody
+   ATTRIBUTE capsAIM    $tetgenAIM;aflr3AIM;aflr4AIM;pointwiseAIM;su2AIM;fun3dAIM;cart3dAIM
+   ATTRIBUTE capsLength $ft
+   ATTRIBUTE _name      $aircraft
+UDPRIM    editAttr  filename <<
+   FACE HAS    tagComp=fuselage
+   SET         capsGroup=Fuselage
+   SET         capsBound=Fuselage
+   SET         capsMesh=Fuselage
+   SET         AFLR4_Cmp_ID=!AFLR4_Cmp_Fuse
+
+   FACE HAS    tagComp=leftWing  tagType=upper
+   SET         capsGroup=Wing
+   SET         capsBound=upperWing
+   SET         capsMesh=leftWing
+   SET         AFLR4_Cmp_ID=!AFLR4_Cmp_Wing
+
+   FACE HAS    tagComp=leftWing  tagType=lower
+   SET         capsGroup=Wing
+   SET         capsBound=lowerWing
+   SET         capsMesh=leftWing
+   SET         AFLR4_Cmp_ID=!AFLR4_Cmp_Wing
+
+   FACE HAS    tagComp=leftWing  tagType=filler
+   SET         capsGroup=Wing
+   SET         capsMesh=leftWing
+   SET         AFLR4_Cmp_ID=!AFLR4_Cmp_Wing
+
+   FACE HAS    tagComp=leftWing  tagType=tip
+   SET         capsGroup=Wing
+   SET         capsBound=leftTip
+   SET         capsMesh=leftWing
+   SET         AFLR4_Cmp_ID=!AFLR4_Cmp_Wing
+
+   FACE HAS    tagComp=riteWing  tagType=upper
+   SET         capsGroup=Wing
+   SET         capsBound=upperWing
+   SET         capsMesh=riteWing
+   SET         AFLR4_Cmp_ID=!AFLR4_Cmp_Wing
+
+   FACE HAS    tagComp=riteWing  tagType=lower
+   SET         capsGroup=Wing
+   SET         capsBound=lowerWing
+   SET         capsMesh=riteWing
+   SET         AFLR4_Cmp_ID=!AFLR4_Cmp_Wing
+
+   FACE HAS    tagComp=riteWing  tagType=filler
+   SET         capsGroup=Wing
+   SET         capsMesh=riteWing
+   SET         AFLR4_Cmp_ID=!AFLR4_Cmp_Wing
+
+   FACE HAS    tagComp=riteWing  tagType=tip
+   SET         capsGroup=Wing
+   SET         capsBound=riteTip
+   SET         capsMesh=riteWing
+   SET         AFLR4_Cmp_ID=!AFLR4_Cmp_Wing
+
+   FACE HAS    tagComp=leftHtail
+   SET         capsGroup=Htail
+   SET         capsMesh=Htail
+   SET         AFLR4_Cmp_ID=!AFLR4_Cmp_Htail
+
+   FACE HAS    tagComp=riteHtail
+   SET         capsGroup=Htail
+   SET         capsMesh=Htail
+   SET         AFLR4_Cmp_ID=!AFLR4_Cmp_Htail
+
+   FACE HAS    tagComp=vtail
+   SET         capsGroup=Vtail
+   SET         capsMesh=Vtail
+   SET         AFLR4_Cmp_ID=!AFLR4_Cmp_Vtail
+
+   FACE HAS    tagComp=leftNacelle
+   SET         capsGroup=Nacelle
+   SET         capsMesh=Nacelle
+   SET         AFLR4_Cmp_ID=!AFLR4_Cmp_Nacelle
+
+   FACE HAS    tagComp=riteNacelle
+   SET         capsGroup=Nacelle
+   SET         capsMesh=Nacelle
+   SET         AFLR4_Cmp_ID=!AFLR4_Cmp_Nacelle
+
+   FACE HAS    tagComp=leftPylon
+   SET         capsGroup=Pylon
+   SET         capsMesh=Pylon
+   SET         AFLR4_Cmp_ID=!AFLR4_Cmp_Pylon
+
+   FACE HAS    tagComp=ritePylon
+   SET         capsGroup=Pylon
+   SET         capsMesh=Pylon
+   SET         AFLR4_Cmp_ID=!AFLR4_Cmp_Pylon
+>>
+
+# get the wingControls
+PATBEG    ihinge    wing:hinge.nrow*COMP:controls
+   RESTORE   WingControl  ihinge
+   SELECT    FACE
+      ATTRIBUTE capsGroup  $Control
+      ATTRIBUTE capsMesh   $Control
+   SELECT    BODY
+      ATTRIBUTE _name      $WingControl_+ihinge
+      ATTRIBUTE capsAIM    $tetgenAIM;aflr3AIM;aflr4AIM;pointwiseAIM;su2AIM;fun3dAIM;cart3dAIM
+      ATTRIBUTE capsLength $ft
+PATEND
+
+# get the htailControls
+PATBEG    ihinge    htail:hinge.nrow*COMP:controls
+   RESTORE   HtailControl  ihinge
+   SELECT    FACE
+      ATTRIBUTE capsGroup  $Control
+      ATTRIBUTE capsMesh   $Control
+   SELECT    BODY
+      ATTRIBUTE _name      $HtailControl_+ihinge
+      ATTRIBUTE capsAIM    $tetgenAIM;aflr3AIM;aflr4AIM;pointwiseAIM;su2AIM;fun3dAIM;cart3dAIM
+      ATTRIBUTE capsLength $ft
+PATEND
+
+# get the vtailControls
+PATBEG    ihinge    vtail:hinge.nrow*COMP:controls
+   RESTORE   VtailControl  ihinge
+   SELECT    FACE
+      ATTRIBUTE capsGroup  $Control
+      ATTRIBUTE capsMesh   $Control
+   SELECT    BODY
+      ATTRIBUTE _name      $VtailControl_+ihinge
+      ATTRIBUTE capsAIM    $tetgenAIM;aflr3AIM;aflr4AIM;pointwiseAIM;su2AIM;fun3dAIM;cart3dAIM
+      ATTRIBUTE capsLength $ft
+PATEND
+
+# add the necessary CAPS Attributes to all the Bodys on the stack
+SET       nbody    @stack.size
+PATBEG    ibody    nbody
+   STORE  tempBody ibody
+PATEND
+
+SET       xmin     +1e20
+SET       xmax     -1e20
+SET       ymin     +1e20
+SET       ymax     -1e20
+SET       zmin     +1e20
+SET       zmax     -1e20
+
+PATBEG    ibody    nbody
+   RESTORE   tempBody  nbody+1-ibody
+      ATTRIBUTE capsAIM    $tetgenAIM;aflr3AIM;aflr4AIM;pointwiseAIM;su2AIM;fun3dAIM
+      ATTRIBUTE capsLength $ft
+   SET    xmin     min(xmin,@xmin)
+   SET    xmax     max(xmax,@xmax)
+   SET    ymin     min(ymin,@ymin)
+   SET    ymax     max(ymax,@ymax)
+   SET    zmin     min(zmin,@zmin)
+   SET    zmax     max(zmax,@zmax)
+
+   UDPRIM    editAttr  filename <<
+      FACE HAS    tagComp=fuselage
+      SET         capsGroup=Fuselage
+      SET         capsBound=Fuselage
+      SET         capsMesh=Fuselage
+      SET         AFLR4_Cmp_ID=!AFLR4_Cmp_Fuse
+
+      FACE HAS    tagComp=leftWing  tagType=upper
+      SET         capsGroup=Wing
+      SET         capsBound=upperWing
+      SET         capsMesh=leftWing
+      SET         AFLR4_Cmp_ID=!AFLR4_Cmp_Wing
+
+      FACE HAS    tagComp=leftWing  tagType=lower
+      SET         capsGroup=Wing
+      SET         capsBound=lowerWing
+      SET         capsMesh=leftWing
+      SET         AFLR4_Cmp_ID=!AFLR4_Cmp_Wing
+
+      FACE HAS    tagComp=leftWing  tagType=filler
+      SET         capsGroup=Wing
+      SET         capsMesh=leftWing
+      SET         AFLR4_Cmp_ID=!AFLR4_Cmp_Wing
+
+      FACE HAS    tagComp=leftWing  tagType=tip
+      SET         capsGroup=Wing
+      SET         capsBound=leftTip
+      SET         capsMesh=leftWing
+      SET         AFLR4_Cmp_ID=!AFLR4_Cmp_Wing
+
+      FACE HAS    tagComp=riteWing  tagType=upper
+      SET         capsGroup=Wing
+      SET         capsBound=upperWing
+      SET         capsMesh=riteWing
+      SET         AFLR4_Cmp_ID=!AFLR4_Cmp_Wing
+
+      FACE HAS    tagComp=riteWing  tagType=lower
+      SET         capsGroup=Wing
+      SET         capsBound=lowerWing
+      SET         capsMesh=riteWing
+      SET         AFLR4_Cmp_ID=!AFLR4_Cmp_Wing
+
+      FACE HAS    tagComp=riteWing  tagType=filler
+      SET         capsGroup=Wing
+      SET         capsMesh=riteWing
+      SET         AFLR4_Cmp_ID=!AFLR4_Cmp_Wing
+
+      FACE HAS    tagComp=riteWing  tagType=tip
+      SET         capsGroup=Wing
+      SET         capsBound=riteTip
+      SET         capsMesh=riteWing
+      SET         AFLR4_Cmp_ID=!AFLR4_Cmp_Wing
+
+      FACE HAS    tagComp=leftHtail
+      SET         capsGroup=Htail
+      SET         capsMesh=Htail
+      SET         AFLR4_Cmp_ID=!AFLR4_Cmp_Htail
+
+      FACE HAS    tagComp=riteHtail
+      SET         capsGroup=Htail
+      SET         capsMesh=Htail
+      SET         AFLR4_Cmp_ID=!AFLR4_Cmp_Htail
+
+      FACE HAS    tagComp=vtail
+      SET         capsGroup=Vtail
+      SET         capsMesh=Vtail
+      SET         AFLR4_Cmp_ID=!AFLR4_Cmp_Vtail
+
+      FACE HAS    tagComp=leftNacelle
+      SET         capsGroup=Nacelle
+      SET         capsMesh=Nacelle
+      SET         AFLR4_Cmp_ID=!AFLR4_Cmp_Nacelle
+
+      FACE HAS    tagComp=riteNacelle
+      SET         capsGroup=Nacelle
+      SET         capsMesh=Nacelle
+      SET         AFLR4_Cmp_ID=!AFLR4_Cmp_Nacelle
+
+      FACE HAS    tagComp=leftPylon
+      SET         capsGroup=Pylon
+      SET         capsMesh=Pylon
+      SET         AFLR4_Cmp_ID=!AFLR4_Cmp_Pylon
+
+      FACE HAS    tagComp=ritePylon
+      SET         capsGroup=Pylon
+      SET         capsMesh=Pylon
+      SET         AFLR4_Cmp_ID=!AFLR4_Cmp_Pylon
+   >>
+PATEND
+
+# build the farfield
+SET       size   20*max(xmax-xmin,ymax-ymin)
+BOX       (xmin+xmax-size)/2   (ymin+ymax-size)/2   (zmin+zmax-size)/2 \
+          size                 size                 size
+   ATTRIBUTE _name              $Farfield
+   ATTRIBUTE capsGroup          $Farfield
+   ATTRIBUTE capsMesh           $Farfield
+   ATTRIBUTE AFLR4_Cmp_ID       AFLR4_Cmp_Farfield
+   ATTRIBUTE capsReferenceArea  wing:area
+   ATTRIBUTE capsReferenceSpan  wing:span
+   ATTRIBUTE capsReferenceChord wing:mac
+   ATTRIBUTE capsReferenceX     wing:xroot+wing:mac/4.0
+   ATTRIBUTE capsMeshLength     wing:mac
+SELECT BODY
+   ATTRIBUTE capsAIM            $tetgenAIM;aflr3AIM;aflr4AIM;pointwiseAIM;su2AIM;fun3dAIM
+
+END

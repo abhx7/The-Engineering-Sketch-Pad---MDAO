@@ -1,0 +1,169 @@
+# .udc to make the wingWaffle
+# written by John Dannenhoffer
+
+INTERFACE . ALL
+
+# set a mark so that we can restore the stack back to
+#    where it was when we started
+MARK
+
+# check to see if the Body already exits
+RESTORE   wingWaffle
+
+# if it does not exist, make it now
+CATBEG    $name_not_found
+   MESSAGE Building_wingWaffle
+
+   # make sure the wingOml exists
+   UDPRIM    $/wingOml
+
+   # outline of the waffle
+   SET        yA            0
+   SET        xA            wing:xroot
+   SET        yB            -wing:ytip
+   SET        xB            wing:xtip
+   SET        yC            0
+   SET        xC            wing:xroot+wing:chordr
+   SET        yD            -wing:ybreak
+   SET        xD            wing:xbreak+wing:chordb
+   SET        yE            -wing:ytip
+   SET        xE            wing:xtip+wing:chordt
+
+   # get required depth of the waffle
+   RESTORE    wingOml
+   SET        zmin          @zmin-0.1
+   SET        zmax          @zmax+0.1
+   STORE      .
+
+   # make the waffle
+   UDPARG     waffle        depth    zmax-zmin
+   UDPRIM     waffle        filename <<
+
+   # construction lines for wing outline
+   CPOINT A   AT  xA  yA
+   CPOINT B   AT  xB  yB
+   CPOINT C   AT  xC  yC
+   CPOINT D   AT  xD  yD
+   CPOINT E   AT  xE  yE
+
+   CLINE  AB      A   B
+   CLINE  CD      C   D
+   CLINE  DE      D   E
+   CLINE  AC      A   C
+   CLINE  BE      B   E
+
+   # construction lines for fuselage side and wing break
+   CPOINT F   ON  AB  YLOC  y@D
+   CPOINT K   ON  AB  YLOC  fuse:midWidth/2+wing:waffleGap
+   CPOINT L   ON  CD  YLOC  fuse:midWidth/2+wing:waffleGap
+
+   CLINE  FD      F   D
+
+   # construction lines for spars
+   CPOINT G   ON  FD   FRAC  wing:spar1
+   CPOINT H   ON  BE   FRAC  wing:spar1
+   CPOINT I   ON  FD   FRAC  wing:spar2
+   CPOINT J   ON  BE   FRAC  wing:spar2
+
+   CLINE  GH      G   H
+   CLINE  IJ      I   J
+   CLINE  KL      K   L
+
+   # spars
+   POINT  M   ON  GH  XSECT  KL
+   LINE   MH      M   H  tagType=spar  tagIndex=1
+
+   POINT  N   ON  IJ  XSECT  KL
+   LINE   NJ      N   J  tagType=spar  tagIndex=2
+
+   POINT  O   ON  KL  XLOC   x@I
+   LINE   OI      O   I  tagType=spar  tagIndex=3
+
+   # fuselage wing box
+   POINT  MM  AT  x@M 0
+   LINE   .       M   MM tagType=fusespar tagIndex=1
+
+   POINT  X   AT  x@N 0
+   LINE   .       N   X  tagType=fusespar tagIndex=2
+
+   POINT  OO  at  x@O 0
+   LINE   .       O   OO tagType=fusespar tagIndex=3
+
+   # rib
+   LINE MN M N
+   LINE NO N O
+
+   # wing root
+   LINE   .       MM  OO tagType=root
+
+   # wing tip
+   LINE   HJ      H   J  tagType=tip
+
+   # ribs in region 1
+   PATBEG  iIi  wing:nrib1
+      POINT  X   AT  x@M+(x@N-x@M)*iIi/(wing:nrib1+1) y@M+(y@N-y@M)*iIi/(wing:nrib1+1)
+      POINT  Y   ON  MH  PERP   X
+      LINE   .       X   Y   tagType=rib   tagIndex=!val2str(iIi,0)
+   PATEND
+
+   # rib from point N
+   CPOINT X   AT      x@N    y@N
+   POINT  Y   ON  MH  PERP   X
+   LINE   .       X   Y      tagType=rib   tagIndex=!val2str(wing:nrib1+1,0)
+
+   # ribs in region 2
+   PATBEG  iIi  wing:nrib2
+      POINT  X  AT x@N+(x@I-x@N)*iIi/(wing:nrib2+1)  y@N+(y@I-y@N)*iIi/(wing:nrib2+1)
+      POINT  Y   ON  MH  PERP   X
+      LINE   .       Y   X      tagType=rib   tagIndex=!val2str(wing:nrib1+2+iIi,0)
+      POINT  Z   ON  OI  PERP   X
+      LINE   .       X   Z      tagType=rib   tagIndex=!val2str(wing:nrib1+2+iIi,0)   tagExtra=rear
+   PATEND
+
+   # rib from point I
+   CPOINT X   AT      x@I    y@I
+   POINT  Y   ON  MH  PERP   X
+   LINE   .       X   Y      tagType=rib   tagIndex=!val2str(wing:nrib1+wing:nrib2+2,0)
+
+   # ribs in region 3
+   PATBEG  iIi  wing:nrib3
+      POINT  X  AT x@I+(x@J-x@I)*iIi/(wing:nrib3+1)  y@I+(y@J-y@I)*iIi/(wing:nrib3+1)
+      POINT  Y   ON  MH  PERP   X
+      LINE   .       Y   X   tagType=rib   tagIndex=!val2str(wing:nrib1+wing:nrib2+2+iIi,0)
+   PATEND
+   >>
+
+   # move down to be coincident with wingOml
+   TRANSLATE  0  0  zmin
+
+   # attribute the rite wing Faces
+   SELECT    FACE
+      ATTRIBUTE tagComp $riteWing
+
+   # make a copy for the left wing
+   RESTORE   .
+   MIRROR    0  1  0  0
+
+   # re-attribute the left wing Faces
+   SELECT    FACE
+      ATTRIBUTE tagComp $leftWing
+
+   # make a single waffle
+   JOIN
+
+   # get the locations of the wing spars through the fuselage
+   SELECT    FACE         $tagType  $fusespar  $tagIndex  $1
+   SET       wing:xspar1  @xcg
+   SELECT    FACE          $tagType  $fusespar  $tagIndex  $2
+   SET       wing:xspar2  @xcg
+   SELECT    FACE         $tagType  $fusespar  $tagIndex  $3
+   SET       wing:xspar3  @xcg
+
+   # store the final Body
+   STORE     wingWaffle
+CATEND
+
+# make sure that we did not leave any new Bodys on the stack
+STORE     ..
+
+END

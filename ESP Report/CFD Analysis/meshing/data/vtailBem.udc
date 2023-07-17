@@ -1,0 +1,53 @@
+# .udc to make the vtailBem
+# written by John Dannenhoffer
+
+INTERFACE . ALL
+
+# set a mark so that we can restore the stack back to
+#    where it was when we started
+MARK
+
+# make sure we have the vtailOml and vtailWaffle
+UDPRIM    $/vtailOml
+UDPRIM    $/vtailWaffle
+
+# scribe the OML by the Waffle
+RESTORE   vtailOml
+RESTORE   vtailWaffle
+SUBTRACT
+
+# extract out the skins
+EXTRACT   0
+
+# trim the Waffle by the Oml
+RESTORE   vtailOml
+RESTORE   vtailWaffle
+INTERSECT
+
+# join the two to make the BEM
+JOIN
+
+# mark all the Faces adjacent to the leading edge or trailing edge
+UDPRIM    editAttr  filename <<
+   FACE   ADJ2EDGE  tagType=leadingEdge
+   SET              remove=yes
+
+   FACE   ADJ2FACE  tagType=trailingEdge
+   SET              remove=yes
+
+   FACE   HAS       tagType=trailingEdge
+   SET              remove=yes
+>>
+
+# remove all Faces with remove=yes
+SELECT    FACE      $remove  $yes
+#SELECT    NOT
+EXTRACT   @sellist
+
+# store the final Body
+STORE     vtailBem
+
+# make sure that we did not leave any new Bodys on the stack
+STORE     ..
+
+END
