@@ -1,0 +1,17 @@
+# /home/abhigyan/Desktop/report/2d_airfoil_selection/design_naca/Scratch/capsRestart.cpc written by ocsmSave (v1.21)
+
+# Constant, Design, and Output Parameters:
+DESPMTR   t       0.10000
+DESPMTR   mc       0.02000
+DESPMTR   lmc       0.30000
+OUTPMTR   aoa
+
+# Global Attributes:
+
+# Branches:
+UDPRIM    naca   thickness   t   camber   mc   maxloc   lmc
+ATTRIBUTE capsAIM   $xfoilAIM
+DUMP      naca.egads   0   0   0
+DUMP      naca.stp   0   0   0
+
+END
