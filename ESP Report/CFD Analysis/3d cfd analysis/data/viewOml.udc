@@ -1,0 +1,143 @@
+# .udc to make the Oml view
+# written by John Dannenhoffer
+
+INTERFACE . ALL
+
+# make sure we have the necessary Bodys
+IFTHEN    COMP:wing NE 0
+    UDPRIM    $/wingOml
+    UDPRIM    $/wingHinges
+ENDIF
+
+IFTHEN    COMP:pylon NE 0
+   UDPRIM     $/pylonOml
+ENDIF
+
+IFTHEN    COMP:nacelle NE 0
+   UDPRIM     $/nacelleOml
+ENDIF
+
+IFTHEN    COMP:htail NE 0
+   UDPRIM     $/htailOml
+   UDPRIM     $/htailHinges
+ENDIF
+
+IFTHEN    COMP:vtail NE 0
+   UDPRIM     $/vtailOml
+   UDPRIM     $/vtailHinges
+ENDIF
+
+IFTHEN    COMP:fuse NE 0
+   UDPRIM     $/fuseOml
+ENDIF
+
+# if we have a fuselage, make it first because we
+#   might have to attach the wing, htail, and vtail
+IFTHEN    COMP:fuse NE 0
+   RESTORE   fuseOml
+      ATTRIBUTE _name $fuse
+ENDIF
+
+# get the wing, htail and vtail and attach them to the
+#   fuselage (if it exists)
+IFTHEN    COMP:wing NE 0
+   RESTORE   wingOml
+      ATTRIBUTE _name $wing
+   IFTHEN    COMP:fuse NE 0
+      UNION
+   ENDIF
+ENDIF
+
+IFTHEN    COMP:htail NE 0
+   RESTORE   htailOml
+      ATTRIBUTE _name $htail
+   IFTHEN    COMP:fuse NE 0
+      UNION
+   ENDIF
+ENDIF
+
+IFTHEN    COMP:vtail NE 0
+   RESTORE   vtailOml
+      ATTRIBUTE _name $vtail
+   IFTHEN    COMP:fuse NE 0
+      UNION
+   ENDIF
+ENDIF
+
+# we need two copies of the nacelle
+IFTHEN    COMP:nacelle NE 0
+   PATBEG    iside 2
+      RESTORE   nacelleOml
+      IFTHEN    iside EQ 1
+         SELECT    BODY
+            ATTRIBUTE _name   $leftNacelle
+         SELECT    FACE
+            ATTRIBUTE tagComp $leftNacelle
+      ELSE
+         MIRROR 0  1  0  0
+         SELECT    BODY
+            ATTRIBUTE _name   $riteNacelle
+         SELECT    FACE
+            ATTRIBUTE tagComp $riteNacelle
+      ENDIF
+
+      # we need a copy of the pylon for each nacelle
+      IFTHEN    COMP:pylon NE 0
+         STORE     .
+         RESTORE   pylonOml
+         IFTHEN    iside EQ 1
+            SELECT    BODY
+               ATTRIBUTE _name   $leftPylon
+            SELECT    FACE
+               ATTRIBUTE tagComp $leftPylon
+         ELSE
+            MIRROR 0  1  0  0
+            SELECT    BODY
+               ATTRIBUTE _name   $ritePylon
+            SELECT    FACE
+               ATTRIBUTE tagComp $ritePylon
+         ENDIF
+
+         # if both the wing and nacelle exist, we want to trim
+         #    and attach the pylon
+         IFTHEN    COMP:wing NE 0
+
+             # we only want the part of the pylon below the wing
+            TRANSLATE  -0.1*(pylon:x1-pylon:x2)  0  -0.1*(pylon:zle-nacelle:z)
+            RESTORE   wingOml
+            SUBTRACT  zmin
+
+            TRANSLATE  +0.1*(pylon:x1-pylon:x2)  0  +0.1*(pylon:zle-nacelle:z)
+            UNION
+
+            # we do not want the pylon to stick through the nacelle
+            RESTORE   nacelleOml
+            IFTHEN    iside EQ 2
+               MIRROR    0  1  0  0
+            ENDIF
+
+            TRANSLATE -0.1*(pylon:x1-pylon:x2)  0  -0.1*(pylon:zle-nacelle:z)
+            SUBTRACT  vmax
+
+            RESTORE   nacelleOml
+            IFTHEN    iside EQ 1
+               SELECT    FACE
+                  ATTRIBUTE tagComp $leftNacelle
+            ELSE
+               MIRROR    0  1  0  0
+               SELECT    FACE
+                  ATTRIBUTE tagComp $riteNacelle
+            ENDIF
+            UNION
+         ENDIF
+      ENDIF
+   PATEND
+ENDIF
+
+# name it if only one Body on the stack
+IFTHEN    @stack.size EQ 1
+   SELECT    BODY
+      ATTRIBUTE _name $airplane
+ENDIF
+
+END

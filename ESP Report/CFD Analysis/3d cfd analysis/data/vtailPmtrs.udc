@@ -1,0 +1,25 @@
+# .udc to define the DESPMTRs and CFGPMTRs for a vtail
+# written by John Dannenhoffer
+
+INTERFACE . ALL
+
+# vtail Oml
+DESPMTR   vtail:vc         0.04    # vtail volume coefficient
+DESPMTR   vtail:offset        0    # difference between vtail:xroot and htail:xroot
+DESPMTR   vtail:aspect     1.80    # vtail aspect ratio
+DESPMTR   vtail:taper      0.28    # vtail taper ratio
+DESPMTR   vtail:sweep        45    # vtail sweep
+DESPMTR   vtail:thick      0.08    # vtail thickness
+DESPMTR   vtail:zroot         9    # zloc of root LE
+
+# vtail hinge lines
+DIMENSION vtail:hinge       1 9 1 # ymin                  ymax
+#                           theta   x/c   y/span  z/t     x/c   y/span z/t    gap   grp
+DESPMTR   vtail:hinge      "  0.0;  0.60;  0.50;  0.35;   0.60;  0.50;  0.97;  0.50; 1"  # rudder
+
+# vtail structure
+DESPMTR   vtail:spar1      0.10
+DESPMTR   vtail:spar2      0.55
+DESPMTR   vtail:nrib         15
+
+END

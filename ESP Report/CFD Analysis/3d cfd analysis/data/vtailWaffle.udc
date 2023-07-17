@@ -1,0 +1,100 @@
+# .udc to make the vtailWaffle
+# written by John Dannenhoffer
+
+INTERFACE . ALL
+
+# set a mark so that we can restore the stack back to
+#    where it was when we started
+MARK
+
+# check to see if the Body already exits
+RESTORE   vtailWaffle
+
+# if it does not exist, make it now
+CATBEG    $name_not_found
+   MESSAGE Building_vtailWaffle
+
+   # make sure the vtailOml and htailWaffle exist
+   UDPRIM    $/vtailOml
+   UDPRIM    $/htailWaffle
+
+   # bounding box of the vtail
+   RESTORE    vtailOml
+   SET        ymin          @ymin-0.1
+   SET        ymax          @ymax+0.1
+   STORE      .
+
+   UDPRIM     waffle        depth ymax-ymin  filename <<
+
+   # construction lines for vtail outline
+   CPOINT A   AT  vtail:xroot               vtail:zroot
+   CPOINT B   AT  vtail:xtip                vtail:ztip
+   CPOINT C   AT  vtail:xroot+vtail:chordr  vtail:zroot
+   CPOINT D   AT  vtail:xtip+vtail:chordt   vtail:ztip
+
+   CLINE  AC      A   C
+   CLINE  BD      B   D
+
+   # spars
+   CPOINT E   ON  AC  FRAC  vtail:spar1
+   CPOINT F   ON  AC  FRAC  vtail:spar2
+
+   CPOINT G   ON  BD  FRAC  vtail:spar1
+   CPOINT H   ON  BD  FRAC  vtail:spar2
+
+   CLINE  EG  E  G
+   CLINE  FH  F  H
+
+   # joints to fuseWaffle
+   POINT  I   AT  htail:xspar1  vtail:zroot
+   POINT  J   ON  EG  XLOC  x@I
+
+   POINT  K   AT  htail:xspar2  vtail:zroot
+   POINT  L   ON  FH  XLOC  x@K
+
+   # spars
+   LINE  IJ  I  J  tagType=spar  tagIndex=1
+   LINE  JG  J  G  tagType=spar  tagIndex=1
+   LINE  KL  K  L  tagType=spar  tagIndex=2
+   LINE  LH  L  H  tagType=spar  tagIndex=2
+
+   # rib along the fuselage
+   LINE  IK  I  K  tagType=root
+
+   # vtail tip
+   LINE  GH  G  H  tagType=tip
+
+   # ribs
+   PATBEG irib vtail:nrib
+      POINT M ON EG FRAC irib/(vtail:nrib+1)
+      POINT N ON FH FRAC irib/(vtail:nrib+1)
+      IFTHEN y@M LT y@J
+         POINT M ON IJ YLOC y@M
+      ENDIF
+      IFTHEN y@N LT y@L
+         POINT N ON KL YLOC y@N
+      ENDIF
+#      POINT M  AT  x@E+(x@G-x@E)*irib/(vtail:nrib+1)  y@E+(y@G-y@E)*irib/(vtail:nrib+1)
+#      POINT N  ON  FH  YLOC y@I
+      LINE  .   M   N  tagType=rib tagIndex=!val2str(irib,0)
+   PATEND
+>>
+
+   # rotate to align with vtail
+   ROTATEX    90 0 0
+
+   # move over to be coincident with vtailOml
+   TRANSLATE  0  ymax  0
+
+   # attribute the vtail Faces
+   SELECT    FACE
+      ATTRIBUTE tagComp $vtail
+
+   # store the final Body
+   STORE     vtailWaffle
+CATEND
+
+# make sure that we did not leave any new Bodys on the stack
+STORE     ..
+
+END

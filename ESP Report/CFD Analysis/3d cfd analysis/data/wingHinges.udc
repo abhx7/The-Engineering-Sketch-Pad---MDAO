@@ -1,0 +1,76 @@
+# .udc to make the wingHinges
+# written by John Dannenhoffer
+
+INTERFACE . ALL
+
+# set a mark so that we can restore the stack back to
+#    where it was when we started
+MARK
+
+# skip this if controls are off
+IFTHEN    COMP:controls EQ 0
+   THROW  -7681
+ENDIF
+
+# check to see if the Body already exists
+RESTORE   wingHinge 1
+
+# if they do not exist, make them now
+CATBEG    $name_not_found
+   MESSAGE Building_wingHinges
+
+   # make sure the wingOml exists
+   UDPRIM    $/wingOml
+
+   PATBEG    ihinge  wing:hinge.nrow
+      SET       y_ibd   wing:hinge[ihinge,3]*(-wing:ytip)
+      BOX       -1000  y_ibd  -1000  2000  0  2000
+      RESTORE   wingOml
+      INTERSECT
+      SET       x_ibd @xmin+wing:hinge[ihinge,2]*(@xmax-@xmin)
+      STORE     .
+      BOX       x_ibd  y_ibd  -1000  0  0  2000
+      RESTORE   wingOml
+      INTERSECT
+      SET       z_ibd   @zmin+wing:hinge[ihinge,4]*(@zmax-@zmin)
+      STORE     .
+
+      SET       y_obd   wing:hinge[ihinge,6]*(-wing:ytip)
+      BOX       -1000  y_obd  -1000  2000  0  2000
+      RESTORE   wingOml
+      INTERSECT
+      SET       x_obd   @xmin+wing:hinge[ihinge,5]*(@xmax-@xmin)
+      STORE     .
+      BOX       x_obd  y_obd  -1000  0  0  2000
+      RESTORE   wingOml
+      INTERSECT
+      SET       z_obd   @zmin+wing:hinge[ihinge,7]*(@zmax-@zmin)
+      STORE     .
+
+      SKBEG      x_ibd  y_ibd  z_ibd
+         LINSEG x_obd  y_obd  z_obd
+      SKEND
+      SELECT    EDGE 1
+         ATTRIBUTE tagComp  $wing
+         ATTRIBUTE tagType  $hinge
+         ATTRIBUTE tagIndex !val2str(wing:hinge[ihinge,9],0)
+         ATTRIBUTE deflect   wing:hinge[ihinge,1]
+         ATTRIBUTE xoverc1   wing:hinge[ihinge,2]
+         ATTRIBUTE xoverc2   wing:hinge[ihinge,5]
+         ATTRIBUTE gap       wing:hinge[ihinge,8]
+         ATTRIBUTE compIndex !val2str(ihinge,0)
+      SELECT BODY
+         ATTRIBUTE _name     $wingHinge_+ihinge
+
+      # store the final Body
+      STORE   wingHinge ihinge
+   PATEND
+CATEND
+
+CATBEG    -7681
+CATEND
+
+# make sure that we did not leave any new Bodys on the stack
+STORE     ..
+
+END

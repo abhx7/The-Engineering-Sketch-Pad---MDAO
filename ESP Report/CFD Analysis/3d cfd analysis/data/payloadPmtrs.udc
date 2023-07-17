@@ -1,0 +1,15 @@
+# .udc to define the DESPMTRs and CFGPMTRs for the payloads
+# written by John Dannenhoffer
+
+INTERFACE . ALL
+
+DESPMTR   payload:galleyLen  15
+DESPMTR   payload:space       1
+DESPMTR   payload:cockpitLen 16
+DESPMTR   payload:fwdCargo   30
+DESPMTR   payload:aftCargo   40
+DESPMTR   payload:floorGap   0.05
+DESPMTR   payload:zfloor     0.5
+DESPMTR   payload:apuLen     25
+
+END

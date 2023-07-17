@@ -1,0 +1,124 @@
+# .udc to make payload Bodys
+# written by John Dannenhoffer
+
+INTERFACE . ALL
+
+# set a mark so that we can restore the stack back to
+#    where it was when we started
+MARK
+
+# check to see if a payload already exists
+RESTORE   payload
+
+# if they do not exist, make them now
+CATBEG    $name_not_found
+   MESSAGE Building_payload
+
+   # these will be STOREd as a GROUP
+   MARK
+
+   # make sure the fuseIml exists
+   UDPRIM    $/fuseIml
+
+   # cockpit - make box and intersect with the fuselage
+   RESTORE   fuseIml
+   BOX       fuse:fwdLength-payload:cockpitLen-payload:space  -fuse:midWidth payload:floorGap \
+             payload:cockpitLen                              2*fuse:midWidth fuse:midHeight
+   INTERSECT
+   SELECT    body
+      ATTRIBUTE _name $cockpit
+      ATTRIBUTE _color $cyan
+      ATTRIBUTE CG    @xcg;@ycg;@zcg
+
+   # forward galley
+   SKBEG     fuse:fwdLength -fuse:midWidth/2+fuse:bulkThick payload:floorGap
+      LINSEG fuse:fwdLength  fuse:midWidth/2-fuse:bulkThick payload:floorGap
+      CIRARC fuse:fwdLength 0                               fuse:midHeight/2-fuse:bulkThick \
+             fuse:fwdLength -fuse:midWidth/2+fuse:bulkThick payload:floorGap
+   SKEND
+   EXTRUDE   payload:galleyLen 0 0
+      ATTRIBUTE _name  $fwdGalley
+      ATTRIBUTE _color $red
+      ATTRIBUTE CG     @xcg;@ycg;@zcg
+
+   # aft galley
+   SET       aftBeg  fuse:fwdLength+fuse:midLength-payload:galleyLen
+
+   SKBEG     aftBeg -fuse:midWidth/2+fuse:bulkThick   payload:floorGap
+      LINSEG aftBeg  fuse:midWidth/2-fuse:bulkThick   payload:floorGap
+      CIRARC aftBeg  0                                fuse:midHeight/2-fuse:bulkThick \
+             aftBeg -fuse:midWidth/2+fuse:bulkThick  payload:floorGap
+   SKEND
+   EXTRUDE payload:galleyLen 0 0
+      ATTRIBUTE _name  $aftGalley
+      ATTRIBUTE _color $red
+      ATTRIBUTE CG     @xcg;@ycg;@zcg
+
+   # passenger compartment
+   SET       passBeg fuse:fwdLength+payload:galleyLen+payload:space
+   SET       passLen fuse:midLength-2*(payload:galleyLen+payload:space)
+
+   SKBEG     passBeg -fuse:midWidth/2+fuse:bulkThick payload:floorGap
+      LINSEG passBeg  fuse:midWidth/2-fuse:bulkThick payload:floorGap
+      CIRARC passBeg  0                              fuse:midHeight/2-fuse:bulkThick \
+             passBeg -fuse:midWidth/2+fuse:bulkThick payload:floorGap
+   SKEND
+   EXTRUDE   passLen 0 0
+      ATTRIBUTE _name  $passengerSeats
+      ATTRIBUTE _color $green
+      ATTRIBUTE CG     @xcg;@ycg;@zcg
+
+   # avionics
+   BOX       fuse:fwdLength-payload:space-0.5*payload:cockpitLen -fuse:midWidth/4 -payload:floorGap \
+             0.5*payload:cockpitLen                               fuse:midWidth/2 -fuse:midHeight/4
+      ATTRIBUTE _name  $avionics
+      ATTRIBUTE _color $cyan
+      ATTRIBUTE CG     @xcg;@ycg;@zcg
+
+   # forward cargo bay
+   SKBEG     fuse:fwdLength -fuse:midWidth/2+fuse:bulkThick -payload:floorGap
+      LINSEG fuse:fwdLength  fuse:midWidth/2-fuse:bulkThick -payload:floorGap
+      CIRARC fuse:fwdLength  0                              -fuse:midHeight/2+fuse:bulkThick \
+             fuse:fwdLength -fuse:midWidth/2+fuse:bulkThick -payload:floorGap
+   SKEND
+   EXTRUDE payload:fwdCargo 0 0
+      ATTRIBUTE _name  $fwdCargo
+      ATTRIBUTE _color $blue
+      ATTRIBUTE CG     @xcg;@ycg;@zcg
+
+   # aft cargo bay
+   SET       aftCgo fuse:fwdLength+fuse:midLength-payload:aftCargo
+
+   SKBEG     aftCgo -fuse:midWidth/2+fuse:bulkThick -payload:floorGap
+      LINSEG aftCgo  fuse:midWidth/2-fuse:bulkThick -payload:floorGap
+      CIRARC aftCgo  0                              -fuse:midHeight/2+fuse:bulkThick \
+             aftCgo -fuse:midWidth/2+fuse:bulkThick -payload:floorGap
+   SKEND
+   EXTRUDE payload:aftCargo 0 0
+      ATTRIBUTE _name  $aftCargo
+      ATTRIBUTE _color $blue
+      ATTRIBUTE CG     @xcg;@ycg;@zcg
+
+   # fuselage fuel tank
+   SET       wingFuelBeg fuse:fwdLength+payload:space+payload:fwdCargo
+   SET       wingFuelExt fuse:midLength-payload:fwdCargo-payload:aftCargo-2*payload:space
+
+   SKBEG     wingFuelBeg -fuse:midWidth/2+fuse:bulkThick -payload:floorGap
+      LINSEG wingFuelBeg  fuse:midWidth/2-fuse:bulkThick -payload:floorGap
+      CIRARC wingFuelBeg  0                              -fuse:midHeight/2+fuse:bulkThick \
+             wingFuelBeg -fuse:midWidth/2+fuse:bulkThick -payload:floorGap
+   SKEND
+   EXTRUDE wingFuelExt 0 0
+      ATTRIBUTE _name  $fuseFuelTank
+      ATTRIBUTE _color $black
+      ATTRIBUTE CG     @xcg;@ycg;@zcg
+
+   # STORE as a GROUP
+   GROUP
+   STORE    payload
+CATEND
+
+# make sure that we did not leave any new Bodys on the stack
+STORE     ..
+
+END

@@ -1,0 +1,75 @@
+# .udc to make the vtailHinges
+# written by John Dannenhoffer
+
+INTERFACE . ALL
+
+# skip this if controls are off
+IFTHEN    COMP:controls EQ 0
+   THROW  -7681
+ENDIF
+
+# set a mark so that we can restore the stack back to
+#    where it was when we started
+MARK
+
+# check to see if the Body already exists
+RESTORE   vtailHinge 1
+
+# if they do not exist, make them now
+CATBEG    $name_not_found
+   MESSAGE Building_vtailHinges
+
+   # make sure the vtailOml exists
+   UDPRIM    $/vtailOml
+
+   PATBEG    ihinge  vtail:hinge.nrow
+      SET       z_ibd   vtail:hinge[ihinge,4]*(vtail:ztip)
+      BOX       -1000 -1000 z_ibd 2000 2000 0
+      RESTORE   vtailOml
+      INTERSECT
+      SET       x_ibd   @xmin+vtail:hinge[ihinge,2]*(@xmax-@xmin)
+      STORE     .
+      BOX       x_ibd  -1000  z_ibd  0  2000  0
+      RESTORE   vtailOml
+      INTERSECT
+      SET       y_ibd  @ymin+vtail:hinge[ihinge,4]*(@ymax-@ymin)
+      STORE     .
+
+      SET       z_obd   vtail:hinge[ihinge,7]*(vtail:ztip)
+      BOX       -1000 -1000 z_obd 2000 2000 0
+      RESTORE   vtailOml
+      INTERSECT
+      SET       x_obd   @xmin+vtail:hinge[ihinge,5]*(@xmax-@xmin)
+      STORE     .
+      BOX       x_obd  -1000  z_obd  0  2000  0
+      RESTORE   vtailOml
+      INTERSECT
+      SET       y_obd  @ymin+vtail:hinge[ihinge,4]*(@ymax-@ymin)
+      STORE     .
+
+      SKBEG      x_ibd  y_ibd  z_ibd
+         LINSEG x_obd  y_obd  z_obd
+      SKEND
+      SELECT    EDGE 1
+         ATTRIBUTE tagComp  $vtail
+         ATTRIBUTE tagType  $hinge
+         ATTRIBUTE tagIndex !val2str(vtail:hinge[ihinge,9],0)
+         ATTRIBUTE deflect   vtail:hinge[ihinge,1]
+         ATTRIBUTE xoverc1   vtail:hinge[ihinge,2]
+         ATTRIBUTE xoverc2   vtail:hinge[ihinge,5]
+         ATTRIBUTE gap       vtail:hinge[ihinge,8]
+      SELECT BODY
+         ATTRIBUTE _name     $vtailHinge_+ihinge
+
+      # store the final Body
+      STORE    vtailHinge ihinge
+   PATEND
+CATEND
+
+CATBEG    -7681
+CATEND
+
+# make sure that we did not leave any new Bodys on the stack
+STORE     ..
+
+END

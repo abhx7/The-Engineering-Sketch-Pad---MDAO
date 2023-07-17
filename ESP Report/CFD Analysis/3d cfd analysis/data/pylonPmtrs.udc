@@ -1,0 +1,11 @@
+# .udc to define the DESPMTRs and CFGPMTRs for a pylon
+# written by John Dannenhoffer
+
+INTERFACE . ALL
+
+DESPMTR   pylon:dxwing     3.00    # x offset from leading edge of wing
+DESPMTR   pylon:dxnacelle  1.00    # x offset from leading edge of nacelle
+DESPMTR   pylon:length     9.50    # length of pylon
+DESPMTR   pylon:thick      0.10    # thickness ratio of pylon
+
+END

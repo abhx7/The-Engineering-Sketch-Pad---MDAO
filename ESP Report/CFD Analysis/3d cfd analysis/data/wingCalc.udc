@@ -1,0 +1,23 @@
+# .udc to calculate critial locations and dimensions for a wing
+# written by John Dannenhoffer
+
+INTERFACE . ALL
+
+OUTPMTR   wing:mac
+OUTPMTR   wing:span
+
+SET       wing:span      sqrt(wing:aspect*wing:area)
+SET       wing:yroot     0
+SET       wing:ytip     -wing:span/2
+SET       wing:xtip      wing:xroot-wing:ytip*tand(wing:sweep)
+SET       wing:ztip      wing:zroot-wing:ytip*tand(wing:dihedral)
+SET       wing:ybreak    wing:ytip*wing:break
+SET       wing:xbreak    wing:xroot-wing:ybreak*tand(wing:sweep)
+SET       wing:zbreak    wing:zroot-wing:ybreak*tand(wing:dihedral)
+SET       wing:chordr    wing:area/((wing:yroot-wing:ybreak)*(wing:taperi+1)+(wing:ybreak-wing:ytip)*wing:taperi*(wing:tapero+1))
+SET       wing:chordb    wing:chordr*wing:taperi
+SET       wing:chordt    wing:chordb*wing:tapero
+SET       wing:mac       sqrt(wing:area/wing:aspect)
+SET       wing:sharpte   SHARP_TE
+
+END

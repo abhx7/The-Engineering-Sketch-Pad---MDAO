@@ -1,0 +1,53 @@
+# .udc to make the wingOml
+# written by John Dannenhoffer
+
+INTERFACE . ALL
+
+# set a mark so that we can restore the stack back to
+#    where it was when we started
+MARK
+
+# check to see if the Body already exits
+RESTORE   vtailOml
+
+# if it does not exist, make it now
+CATBEG    $name_not_found
+   MESSAGE Building_vtailOml
+
+   # lay out vertical tail
+   MARK
+      UDPRIM    naca    thickness  vtail:thick   sharpte  vtail:sharpte
+      SCALE     vtail:chordr
+      TRANSLATE vtail:xroot   0   vtail:zroot
+
+      UDPRIM    naca    thickness  vtail:thick   sharpte  vtail:sharpte
+      SCALE     vtail:chordt
+      TRANSLATE vtail:xtip    0   vtail:ztip
+   RULE
+      ATTRIBUTE tagComp  $vtail
+   SELECT    FACE      @nbody 1
+      ATTRIBUTE tagType  $root
+   SELECT    FACE      @nbody 2
+      ATTRIBUTE tagType  $tip
+   SELECT    FACE      @nbody 3
+      ATTRIBUTE tagType  $rite
+   SELECT    FACE      @nbody 4
+      ATTRIBUTE tagType  $left
+   SELECT    EDGE      @nbody 3 @nbody 4
+      ATTRIBUTE tagType  $leadingEdge
+   IFTHEN    vtail:sharpte EQ 0
+      SELECT    FACE      @nbody 5
+         ATTRIBUTE tagType  $trailingEdge
+   ELSE
+      SELECT    EDGE      @nbody 3 @nbody 4 2
+         ATTRIBUTE tagType  $trailingEdge
+   ENDIF
+
+   # store the final Body
+   STORE    vtailOml
+CATEND
+
+# make sure that we did not leave any new Bodys on the stack
+STORE     ..
+
+END

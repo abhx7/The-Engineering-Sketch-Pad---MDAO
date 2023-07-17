@@ -1,0 +1,20 @@
+# .udc to calculate critial locations and dimensions for a vtail
+# written by John Dannenhoffer
+
+INTERFACE . ALL
+
+OUTPMTR   vtail:area
+OUTPMTR   vtail:span
+
+# note: vtail location is based upon htail location
+
+SET       vtail:area     vtail:vc*wing:area*wing:span/htail:length
+SET       vtail:span     sqrt(vtail:area*vtail:aspect)
+SET       vtail:chordr   2*vtail:area/vtail:span/(1+vtail:taper)
+SET       vtail:chordt   vtail:chordr*vtail:taper
+SET       vtail:xroot    vtail:offset+htail:xroot+htail:chordr*htail:spar1-vtail:chordr*vtail:spar1
+SET       vtail:xtip     vtail:xroot+vtail:span*tand(vtail:sweep)
+SET       vtail:ztip     vtail:zroot+vtail:span
+SET       vtail:sharpte  SHARP_TE
+
+END

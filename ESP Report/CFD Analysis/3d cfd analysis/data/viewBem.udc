@@ -1,0 +1,106 @@
+# .udc to make the Bem
+# written by John Dannenhoffer
+
+INTERFACE . ALL
+
+# make sure we have the wingBem, fuseOml, fuseIml, and fuseBem
+IFTHEN    COMP:fuse   NE 0
+   UDPRIM    $/fuseBem
+ENDIF
+IFTHEN    COMP:wing   NE 0
+   UDPRIM    $/wingBem
+ENDIF
+IFTHEN    COMP:htail  NE 0
+   UDPRIM    $/htailBem
+ENDIF
+IFTHEN    COMP:vtail  NE 0
+   UDPRIM    $/vtailBem
+ENDIF
+IFTHEN    COMP:wing   NE 0  AND  COMP:fuse NE 0
+   UDPRIM    $/fuseOml
+   UDPRIM    $/fuseIml
+ENDIF
+IFTHEN    COMP:htail  NE 0  AND  COMP:fuse NE 0
+   UDPRIM    $/fuseOml
+   UDPRIM    $/fuseIml
+ENDIF
+IFTHEN    COMP:vtail  NE 0  AND  COMP:fuse NE 0
+   UDPRIM    $/fuseOml
+   UDPRIM    $/fuseIml
+ENDIF
+
+IFTHEN    COMP:fuse NE 0
+   RESTORE   fuseBem
+   STORE     bem
+ELSEIF    COMP:wing NE 0
+   RESTORE   wingBem
+   STORE     bem
+ELSEIF    COMP:htail NE 0
+   RESTORE   htailBem
+   STORE     bem
+ENDIF
+
+# combine the wingBem and fuseBem
+IFTHEN    COMP:wing NE 0  AND  COMP:fuse NE 0
+   RESTORE   wingBem
+
+   # scribe the wingBem by the fuseOml and fuseIml
+   RESTORE     fuseOml
+   EXTRACT   0
+   SUBTRACT
+
+   RESTORE     fuseIml
+   EXTRACT   0
+   SUBTRACT
+
+   # combine with the bem
+   RESTORE   bem
+   UNION
+
+   STORE     bem
+ENDIF
+
+# combine the htailBem and fuseBem
+IFTHEN    COMP:htail NE 0  AND  COMP:fuse NE 0
+   RESTORE   htailBem
+
+   # scribe the htailBem by the fuseOml and fuseIml
+   RESTORE     fuseOml
+   EXTRACT   0
+   SUBTRACT
+
+   RESTORE     fuseIml
+   EXTRACT   0
+   SUBTRACT
+
+   # combine with the bem
+   RESTORE   bem
+   UNION
+
+   STORE     bem
+ENDIF
+
+# combine the vtailBem and fuseBem
+IFTHEN    COMP:vtail NE 0  AND  COMP:fuse NE 0
+   RESTORE   vtailBem
+
+   # scribe the vtailBem by the fuseOml and fuseIml
+   RESTORE     fuseOml
+   EXTRACT   0
+   SUBTRACT
+
+   RESTORE     fuseIml
+   SUBTRACT
+
+   # combine with the bem
+   RESTORE   bem
+   UNION
+
+   STORE     bem
+ENDIF
+
+# put the final bem on the stack
+RESTORE   bem
+   ATTRIBUTE _name $bem
+
+END
