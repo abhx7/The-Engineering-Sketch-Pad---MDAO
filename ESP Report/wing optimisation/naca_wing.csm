@@ -1,0 +1,71 @@
+#wing structure
+
+# Wing lenght units in m
+ATTRIBUTE capsLength $m
+
+# Wing design parameters
+DESPMTR  	wing:thick    		0.10		# thickness  - frac of local chord
+DESPMTR  	wing:camber    		0.12		# max camber - frac of local chord
+DESPMTR   	wing:lmc       		0.40    	# location of max camber - frac of local chord
+	
+			
+#DESPMTR		wing:aspect_ratio
+#DESPMTR		wing:thickness_chord_ratio
+
+DESPMTR   	wing:area     		12.0
+DESPMTR   	wing:span      		15.0
+DESPMTR   	wing:sweep      	0.0     	# deg (of c/4)
+DESPMTR   	wing:dihedral   	4.0     	# deg
+DESPMTR   	wing:taper     		0.70
+DESPMTR   	wing:croot      	1.0
+DESPMTR   	wing:xroot    		-0.25     	# xloc at root LE
+DESPMTR   	wing:zroot     		0.00     	# zloc at root LE
+
+# Internal parameters
+SET       	wing:ctip      		wing:croot*wing:taper
+SET       	wing:xtip      		wing:xroot+(wing:croot-wing:ctip)/4+wing:span/2*tand(wing:sweep)
+SET       	wing:ztip      		wing:zroot+wing:span/2*tand(wing:dihedral)
+
+
+######### Wing ########################
+#MARK
+# Right tip
+UDPRIM    naca  Thickness wing:thick  Camber wing:camber
+SCALE     wing:ctip
+ROTATEX   90        0         0
+TRANSLATE wing:xtip    -wing:span/2    wing:ztip
+SELECT body
+    ATTRIBUTE capsGroup               $Wing
+    ATTRIBUTE vlmControl_AileronRight 0.8  #Hinge line 80% chord
+    ATTRIBUTE capsAIM                 $avlAIM
+    ATTRIBUTE _name                   $wing:right
+
+
+# Root
+UDPRIM    naca  Thickness wing:thick  Camber wing:camber
+SCALE     wing:croot
+ROTATEX   90        0         0
+TRANSLATE wing:xroot    0    wing:zroot
+SELECT body
+    ATTRIBUTE capsGroup               $Wing
+    ATTRIBUTE vlmControl_AileronRight 0.8  #Hinge line 80% chord
+    ATTRIBUTE vlmControl_AileronLeft  0.8  #Hinge line 80% chord
+    ATTRIBUTE capsAIM                 $avlAIM
+    ATTRIBUTE capsReferenceArea       wing:area
+    ATTRIBUTE capsReferenceSpan       wing:span
+    ATTRIBUTE capsReferenceChord      wing:croot
+    ATTRIBUTE capsReferenceX          wing:xroot+wing:croot/4
+    ATTRIBUTE _name                   $wing:root
+
+# Left tip
+UDPRIM    naca  Thickness wing:thick  Camber wing:camber
+SCALE     wing:ctip
+ROTATEX   90        0         0
+TRANSLATE wing:xtip     wing:span/2    wing:ztip
+SELECT body
+    ATTRIBUTE capsGroup              $Wing
+    ATTRIBUTE vlmControl_AileronLeft 0.8  #Hinge line 80% chord
+    ATTRIBUTE capsAIM                $avlAIM
+    ATTRIBUTE _name                  $wing:left
+#RULE
+END
