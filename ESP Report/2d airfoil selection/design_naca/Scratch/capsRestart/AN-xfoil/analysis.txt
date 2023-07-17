@@ -1,0 +1,21 @@
+12 8 0
+Mach
+Re
+Alpha
+Alpha_Increment
+CL
+CL_Increment
+CL_Inviscid
+Append_PolarFile
+Viscous_Iteration
+Num_Panel
+LETE_Panel_Density_Ratio
+Write_Cp
+Alpha
+CL
+CD
+CD_p
+CM
+Cp_Min
+Transition_Top
+Transition_Bottom
