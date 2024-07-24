@@ -1,10 +1,10 @@
 ## Engineering Sketch Pad (ESP)
 
-##**Introduction**
+## **Introduction**
 
 ESP is an open-source software suite designed to streamline the entire Multi-Disciplinary Analysis and Optimization (MDAO) process, from conceptual design to detailed analysis. It eliminates the need for multiple, often incompatible, software tools by providing a unified environment for various design tasks.
 
-##**Key Features**
+## **Key Features**
 
 * **Open Source:** Freely available and modifiable for customization.
 * **Seamless Integration:** Supports import/export of various file formats and connections to different analysis tools.
@@ -16,19 +16,19 @@ ESP is an open-source software suite designed to streamline the entire Multi-Dis
 * **Sensitivity Analysis:** Calculates the sensitivity of design outputs to design parameters, enabling efficient optimization.
 * **User-Friendly Interface:** Web-based interface provides a convenient platform for interacting with the design process.
 
-##**Benefits**
+### **Benefits**
 
 * **Improved Design Efficiency:** Eliminates the need for juggling multiple software tools, streamlining the workflow.
 * **Reduced Errors:** Seamless data transfer minimizes errors associated with data exchange between different stages.
 * **Faster Design Optimization:** Efficient sensitivity analysis facilitates quicker design iterations.
 * **Open-source Nature:** Enables customization and wider adoption within the engineering community.
 
-##**Applications**
+### **Applications**
 
 * **Aerospace Engineering:** Design and optimization of aircraft components like wings and fuselages.
 * **Other Engineering Disciplines:** Applicable to any field requiring MDAO processes.
 
-##**ESP Architecture**
+## **ESP Architecture**
 
 * **OpenCASCADE:** Provides the solid modeling foundation.
 * **EGADS:** Builds upon OpenCASCADE for parametric geometry creation.
@@ -37,7 +37,7 @@ ESP is an open-source software suite designed to streamline the entire Multi-Dis
 * **CAPS (Computational Aircraft Prototype Syntheses):** Manages information flow between geometry, analysis tools, and the design environment.
 * **AIMs (Analysis Interface Modules):** Interface between CAPS and various analysis tools.
 
-###**Step-by-Step Design Process in ESP**
+### **Step-by-Step Design Process in ESP**
 
 The design process is divided into phases, each focusing on a specific aspect:
 
@@ -47,7 +47,7 @@ The design process is divided into phases, each focusing on a specific aspect:
 4. **Mesh Generation:** Generate surface and volume meshes for CFD analysis.
 5. **3D CFD Analysis:** Perform CFD simulations using a solver like SU2.
 
-##**Additional Resources**
+## **Additional Resources**
 
 * ESP Publications: [https://acdl.mit.edu/ESP/](https://acdl.mit.edu/ESP/)
 * Research Papers: [https://acdl.mit.edu/ESP/Publications/AIA](https://acdl.mit.edu/ESP/Publications/AIA)
