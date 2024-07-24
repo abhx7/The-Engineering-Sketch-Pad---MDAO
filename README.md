@@ -49,5 +49,5 @@ The design process is divided into phases, each focusing on a specific aspect:
 
 ## **Additional Resources**
 
-* ESP Publications: [https://acdl.mit.edu/ESP/](https://acdl.mit.edu/ESP/)
-* Research Papers: [https://acdl.mit.edu/ESP/Publications/AIA](https://acdl.mit.edu/ESP/Publications/AIA)
+* ESP Documentation: [https://acdl.mit.edu/ESP/](https://acdl.mit.edu/ESP/)
+* ESP Publications: [https://acdl.mit.edu/ESP/Publications/AIA](https://acdl.mit.edu/ESP/Publications/AIA)
